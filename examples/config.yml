@@ -1,0 +1,67 @@
+config:
+    enabled: true
+    debug: true
+    default-name: Jobless
+    all:
+        can-use:
+        - WOOD_SWORD
+        - WOOD_HOE
+        - STONE_SWORD
+        - STONE_HOE
+        - BOW
+        can-place:
+        - COBBLESTONE
+        - DIRT
+        - COBBLESTONE_STAIRS
+        - WOOD_STAIRS
+        - STEP
+        - TORCH
+        - WOOL
+        - WOODEN_DOOR
+    jobs:
+        Jobless:
+            friendly-name: Jobless
+            bio: I'll go look for a job tomorrow mom, I promise!
+            limit: -1
+            can-use: []
+            can-place: []
+            can-wear: []
+        Miner:
+            friendly-name: Miner
+            bio: A miner, skilled at extracting ore and minerals from the earth.
+            limit: -1
+            can-use:
+            - WOOD_PICKAXE
+            - STONE_PICKAXE
+            - IRON_PICKAXE
+            - GOLD_PICKAXE
+            - DIAMOND_PICKAXE
+            - WOOD_SPADE
+            - STONE_SPADE
+            - IRON_SPADE
+            - GOLD_SPADE
+            - DIAMOND_SPADE
+            can-place:
+            - DIRT
+            - COBBLESTONE
+        RSE:
+            friendly-name: Redstone Engineer
+            bio: Affectionately dubbed 'Stoners', Redstone Engineers are masters at created RS devices.
+            limit: -1
+            can-use:
+            - WOOD_PICKAXE
+            - STONE_PICKAXE
+            - WOOD_SPADE
+            - STONE_SPADE
+            can-place:
+            - DIRT
+            - COBBLESTONE
+            - REDSTONE_WIRE
+            - REDSTONE_TORCH_ON
+            - STONE_BUTTON
+            - DISPENSER
+            - LEVER
+            - STONE_PLATE
+            - STONE_BUTTON
+            - DIODE_BLOCK_OFF
+            - WOOD_PLATE
