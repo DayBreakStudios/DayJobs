@@ -1,0 +1,30 @@
+dbstudios.dayjobs.admin.reload
+    Can reload configuration files
+
+dbstudios.dayjobs.admin.change
+    Can change a players class
+
+dbstudios.dayjobs.admin.tickets
+    Can access/close tickets
+
+dbstudios.dayjobs.admin.debug
+    Can toggle debug mode
+
+-----
+
+dbstudios.dayjobs.player.list
+    Can list available jobs
+
+dbstudios.dayjobs.player.whois
+    Can 'whois' other players
+
+dbstudios.dayjobs.player.change
+    Can request a job change
+
+dbstudios.dayjobs.player.info
+    Can view job descriptions
+
+------
+
+dbstudios.dayjobs.exempt
+    Exempts the player from job limitations

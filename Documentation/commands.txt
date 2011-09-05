@@ -1,0 +1,26 @@
+/job help
+    This help message
+
+/job list
+    List available jobs
+
+/job info [<job>]
+    Display your job info, or <job> if given
+
+/job whois <player>
+    Display basic info for <player>
+
+/job change <job>
+    Request to be changed to <job>
+
+/job admin reload
+    Reload configuration files
+
+/job admin change <player> <job>
+    Change <player>'s job to <job>
+
+/job admin tickets [close <player>]
+    Display open tickets, or close ticket by <player>
+
+/job admin debug
+    Toggle debug mode
