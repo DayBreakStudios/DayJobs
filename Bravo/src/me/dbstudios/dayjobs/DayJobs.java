@@ -16,7 +16,6 @@ import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
 
-
 public class DayJobs extends JavaPlugin {
 	// Private variables
 	public String pluginDir = "plugins" + File.separator + "dbstudios" + File.separator + "DayJobs" + File.separator;
@@ -25,7 +24,7 @@ public class DayJobs extends JavaPlugin {
 	private static PermissionHandler PermHandler;
 	public String prefix = "<DayJobs> ";
 	private Boolean debug = false;
-	
+		
 	// Configuration links
 	private Configuration config = new Configuration(new File(pluginDir + "config.yml"));
 	private Configuration players = new Configuration(new File(pluginDir + "player.yml"));
@@ -34,6 +33,7 @@ public class DayJobs extends JavaPlugin {
 	//Listeners
 	//private final DayJobsBlockListener blockListener = new DayJobsBlockListener(this);
 	private final DayJobsPlayerListener playerListener = new DayJobsPlayerListener(this);
+	private final DayJobsInventoryListener inventoryListener = new DayJobsInventoryListener(this);
 		
 	@Override
 	public void onEnable() {
@@ -43,6 +43,7 @@ public class DayJobs extends JavaPlugin {
 		manager.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Event.Priority.Normal, this);
 		manager.registerEvent(Event.Type.PLAYER_PICKUP_ITEM, playerListener, Event.Priority.Normal, this);
 		manager.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.Normal, this);
+		manager.registerEvent(Event.Type.CUSTOM_EVENT, inventoryListener, Event.Priority.Normal, this);
 		
 		//Initialize Permissions
 		setupPerms();
@@ -81,7 +82,7 @@ public class DayJobs extends JavaPlugin {
 		}
 		
 		PermHandler = ((Permissions)PermPlug).getHandler();
-		log.info("Permissions found, using " + ((Permissions)PermPlug).getDescription().getFullName());
+		log.info(prefix + "Permissions found, using " + ((Permissions)PermPlug).getDescription().getFullName());
 	}
 	
 	@Override
@@ -108,7 +109,7 @@ public class DayJobs extends JavaPlugin {
 		String[] toCheck = parseToList(getConfig("jobs." + job + "." + type));
 		
 		for (String item : toCheck) {
-			ifDebug("Checking '" + item + "' against placed block '" + block + "'.");
+			ifDebug("Checking '" + item + "' against '" + block + "'.");
 			
 			if (item.equalsIgnoreCase(block)) {
 				matched = true;

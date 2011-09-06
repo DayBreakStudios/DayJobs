@@ -61,6 +61,19 @@ public class DayJobsCommands {
 						//sender.sendMessage(ChatColor.AQUA + "--> Can wear: " + ChatColor.GREEN + canWear);
 
 						return true;
+                    } else if (args[0].equalsIgnoreCase("help")) {
+                        sender.sendMessage(common.prefix + "Commands and syntax:");
+                        
+                        sender.sendMessage(ChatColor.DARK_AQUA + "--> /job list");
+                        sender.sendMessage(ChatColor.AQUA + "  Display available jobs");
+                        sender.sendMessage(ChatColor.DARK_AQUA + "--> /job info [<job>]");
+                        sender.sendMessage(ChatColor.AQUA + "  Display info on your job, or on <job> if given");
+                        sender.sendMessage(ChatColor.DARK_AQUA + "--> /job whois <player>");
+                        sender.sendMessage(ChatColor.AQUA + "  Display basic info for <player>");
+                        sender.sendMessage(ChatColor.DARK_AQUA + "--> /job change <job>");
+                        sender.sendMessage(ChatColor.AQUA + "  Request to be changed to <job>");
+                        
+                        return true;
 					} else {
 						return false;
 					}
@@ -146,6 +159,21 @@ public class DayJobsCommands {
 						} else if (args[1].equalsIgnoreCase("debug") && common.hasPerm(((Player)sender).getDisplayName(), "admin.debug")) {
 							common.ifDebug("Player '" + ((Player)sender).getDisplayName() + "' toggled debug mode.");
 							common.toggleDebug();
+							
+							return true;
+						} else if (args[1].equalsIgnoreCase("help") && common.hasPerm(((Player)sender).getDisplayName(), "admin.help")) {
+							sender.sendMessage(common.prefix + "Admin commands and syntax:");
+							
+							sender.sendMessage(ChatColor.DARK_AQUA + "--> /job admin debug");
+							sender.sendMessage(ChatColor.AQUA + "  Toggle verbose logging");
+							sender.sendMessage(ChatColor.DARK_AQUA + "--> /job admin reload");
+							sender.sendMessage(ChatColor.AQUA + "  Reload configuration files");
+							sender.sendMessage(ChatColor.DARK_AQUA + "--> /job admin change <player> <job>");
+							sender.sendMessage(ChatColor.AQUA + "  Change <player> to <job>");
+							sender.sendMessage(ChatColor.DARK_AQUA + "--> /job admin ticket [close <player>]");
+							sender.sendMessage(ChatColor.AQUA + "  Display a list of open tickers, or close a request by <player>, if given");
+							
+							return true;
 						} else {
 							return false;
 						}

@@ -8,5 +8,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="C:/Users/Tyler/DayBreakStudios/includes/Permissions.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Tyler/DayBreakStudios/includes/SpoutAPI.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
