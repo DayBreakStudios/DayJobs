@@ -20,7 +20,7 @@ public class DayJobs extends JavaPlugin {
 	// Private variables
 	public String pluginDir = "plugins" + File.separator + "dbstudios" + File.separator + "DayJobs" + File.separator;
 	private Logger log = Logger.getLogger("Minecraft");
-	private String version = "1.0";
+	private String version = "1.1";
 	private static PermissionHandler PermHandler;
 	public String prefix = "<DayJobs> ";
 	private Boolean debug = false;
