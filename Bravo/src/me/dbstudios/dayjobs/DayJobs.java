@@ -93,7 +93,6 @@ public class DayJobs extends JavaPlugin {
 	/* *** COMMON *** */
 	public Boolean checkMatch(String block, String player, String type) {
 		/**
-		 * Description:
 		 * 	block	- The block (or item) in hand/being placed
 		 * 	player	- the player to perform the check on
 		 * 	type	- the type of check to perform (i.e. 'can-place', 'can-wear', 'can-use')

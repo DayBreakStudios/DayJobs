@@ -29,18 +29,20 @@ public class DayJobsPlayerListener extends PlayerListener{
 	
 	@Override
 	public void onPlayerInteract(PlayerInteractEvent ev) {
-		String used = ev.getItem().getType().name();
-		String player = ev.getPlayer().getDisplayName();
-		common.ifDebug("Caught PlayerInteractEvent for '" + player + "'.");
+		if (ev.getItem() != null) {
+			String used = ev.getItem().getType().name();
+			String player = ev.getPlayer().getDisplayName();
+			common.ifDebug("Caught PlayerInteractEvent for '" + player + "'.");
 		
-		Boolean matched = common.checkMatch(used, player, "can-place");
-		if (!matched) {
-			matched = common.checkMatch(used, player, "can-use");
-		}
+			Boolean matched = common.checkMatch(used, player, "can-place");
+			if (!matched) {
+				matched = common.checkMatch(used, player, "can-use");
+			}
 		
-		if (!matched && !common.hasPerm(player, "exempt")) {
-			common.ifDebug("PlayerInteractEvent canceled for '" + player + "'.");
-			ev.setCancelled(true);
+			if (!matched && !common.hasPerm(player, "exempt")) {
+				common.ifDebug("PlayerInteractEvent canceled for '" + player + "'.");
+				ev.setCancelled(true);
+			}
 		}
 	}
 	

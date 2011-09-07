@@ -54,11 +54,11 @@ public class DayJobsCommands {
 						//}
 
 						sender.sendMessage(common.prefix + "Job info for '" + job + "'");
-						sender.sendMessage(ChatColor.AQUA + "--> Name: " + ChatColor.GREEN + fname);
-						sender.sendMessage(ChatColor.AQUA + "--> Bio: " + ChatColor.GREEN + bio);
-						sender.sendMessage(ChatColor.AQUA + "--> Can place: " + ChatColor.GREEN + canPlace);
-						sender.sendMessage(ChatColor.AQUA + "--> Can use: " + ChatColor.GREEN + canUse);
-						//sender.sendMessage(ChatColor.AQUA + "--> Can wear: " + ChatColor.GREEN + canWear);
+						sender.sendMessage(ChatColor.AQUA + "--> Name: " + ChatColor.DARK_AQUA + fname);
+						sender.sendMessage(ChatColor.AQUA + "--> Bio: " + ChatColor.DARK_AQUA + bio);
+						sender.sendMessage(ChatColor.AQUA + "--> Can place: " + ChatColor.DARK_AQUA + canPlace);
+						sender.sendMessage(ChatColor.AQUA + "--> Can use: " + ChatColor.DARK_AQUA + canUse);
+						//sender.sendMessage(ChatColor.AQUA + "--> Can wear: " + ChatColor.DARK_AQUA + canWear);
 
 						return true;
                     } else if (args[0].equalsIgnoreCase("help")) {
@@ -96,7 +96,7 @@ public class DayJobsCommands {
 
 						if (job != null) {
 							sender.sendMessage(common.prefix + "Whois lookup for '" + args[1] + "':"); // <-- Happy face 'cuz we found them!
-							sender.sendMessage(ChatColor.AQUA + "--> Job: " + ChatColor.GREEN + job);
+							sender.sendMessage(ChatColor.AQUA + "--> Job: " + ChatColor.DARK_AQUA + job);
 						} else {
 							sender.sendMessage(common.prefix + ChatColor.RED + "Whois failed: " +
 									ChatColor.DARK_AQUA + "Player '" + args[1] + "' does not exist."); // <-- sad face 'cuz we didn't...
@@ -123,11 +123,11 @@ public class DayJobsCommands {
 							//}
 	
 							sender.sendMessage(common.prefix + "Job info for '" + job + "'");
-							sender.sendMessage(ChatColor.AQUA + "--> Name: " + ChatColor.GREEN + fname);
-							sender.sendMessage(ChatColor.AQUA + "--> Bio: " + ChatColor.GREEN + bio);
-							sender.sendMessage(ChatColor.AQUA + "--> Can place: " + ChatColor.GREEN + canPlace);
-							sender.sendMessage(ChatColor.AQUA + "--> Can use: " + ChatColor.GREEN + canUse);
-							//sender.sendMessage(ChatColor.AQUA + "--> Can wear: " + ChatColor.GREEN + canWear);
+							sender.sendMessage(ChatColor.AQUA + "--> Name: " + ChatColor.DARK_AQUA + fname);
+							sender.sendMessage(ChatColor.AQUA + "--> Bio: " + ChatColor.DARK_AQUA + bio);
+							sender.sendMessage(ChatColor.AQUA + "--> Can place: " + ChatColor.DARK_AQUA + canPlace);
+							sender.sendMessage(ChatColor.AQUA + "--> Can use: " + ChatColor.DARK_AQUA + canUse);
+							//sender.sendMessage(ChatColor.AQUA + "--> Can wear: " + ChatColor.DARK_AQUA + canWear);
 						} else {
 							sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA + "Job '" + args[1] + "' does not exist.");
 						}
