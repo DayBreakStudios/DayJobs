@@ -20,21 +20,23 @@ public class DayJobs extends JavaPlugin {
 	// Private variables
 	public String pluginDir = "plugins" + File.separator + "dbstudios" + File.separator + "DayJobs" + File.separator;
 	private Logger log = Logger.getLogger("Minecraft");
-	private String version = "1.1";
+	private String version = "1.2";
 	private static PermissionHandler PermHandler;
 	public String prefix = "<DayJobs> ";
 	private Boolean debug = false;
+	private Boolean usePerms = false;
 		
 	// Configuration links
 	private Configuration config = new Configuration(new File(pluginDir + "config.yml"));
 	private Configuration players = new Configuration(new File(pluginDir + "player.yml"));
 	private Configuration ticket = new Configuration(new File(pluginDir + "ticket.yml"));
+	private Configuration zones = new Configuration(new File(pluginDir + "zones.yml"));
 	
 	//Listeners
 	//private final DayJobsBlockListener blockListener = new DayJobsBlockListener(this);
 	private final DayJobsPlayerListener playerListener = new DayJobsPlayerListener(this);
 	private final DayJobsInventoryListener inventoryListener = new DayJobsInventoryListener(this);
-		
+	
 	@Override
 	public void onEnable() {
 		// Register listeners
@@ -43,7 +45,11 @@ public class DayJobs extends JavaPlugin {
 		manager.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Event.Priority.Normal, this);
 		manager.registerEvent(Event.Type.PLAYER_PICKUP_ITEM, playerListener, Event.Priority.Normal, this);
 		manager.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.Normal, this);
-		manager.registerEvent(Event.Type.CUSTOM_EVENT, inventoryListener, Event.Priority.Normal, this);
+		manager.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Event.Priority.Normal, this);
+		
+		if (setupSpout()) {
+			manager.registerEvent(Event.Type.CUSTOM_EVENT, inventoryListener, Event.Priority.Normal, this);
+		}
 		
 		//Initialize Permissions
 		setupPerms();
@@ -78,11 +84,22 @@ public class DayJobs extends JavaPlugin {
 		
 		if (PermPlug == null) {
 			log.info("Permissions not found, defaulting to OP.");
+			usePerms = false;
 			return;
 		}
 		
 		PermHandler = ((Permissions)PermPlug).getHandler();
 		log.info(prefix + "Permissions found, using " + ((Permissions)PermPlug).getDescription().getFullName());
+		usePerms = true;
+	}
+	
+	public Boolean setupSpout() {
+		if (this.getServer().getPluginManager().getPlugin("Spout") == null) {
+			log.info("Spout not found! Many features will NOT be available.");
+			return false;
+		} else {
+			return true;
+		}
 	}
 	
 	@Override
@@ -186,8 +203,15 @@ public class DayJobs extends JavaPlugin {
 		 * Returns true if <player> has the correct <perm> node, false if not
 		 */
 		perm = "dbstudios.dayjobs." + perm;
-
-		return (PermHandler.has(this.getServer().getPlayer(player), perm) || this.getServer().getPlayer(player).isOp());
+		Boolean hasPerm = false;
+		
+		if (usePerms) {
+			hasPerm = PermHandler.has(this.getServer().getPlayer(player), perm);
+		} else {
+			hasPerm = this.getServer().getPlayer(player).isOp();
+		}
+		
+		return hasPerm;
 	}
 
 	public void reloadConf() {

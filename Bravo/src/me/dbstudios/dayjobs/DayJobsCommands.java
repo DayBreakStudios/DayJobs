@@ -5,12 +5,19 @@ import java.util.Calendar;
 import java.util.List;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class DayJobsCommands {
 	private DayJobs common;
+
+	private static String name = null;
+	private static String[] upper = null;
+	private static String[] lower = null;
+	private static String order = null;
+	private static String acl = null;
 	
 	public DayJobsCommands(DayJobs instance) {
 		common = instance;
@@ -177,10 +184,97 @@ public class DayJobsCommands {
 						} else {
 							return false;
 						}
-					}else {
+					} else {
 						return false;
 					}
-
+				
+					return false;
+					
+			case 3:
+					if (args[0].equalsIgnoreCase("zone") && common.hasPerm(((Player)sender).getDisplayName(), "admin.zones")) {
+						if (args[1].equalsIgnoreCase("create")) {
+							if (name == null) {
+								name = args[1];
+								
+								sender.sendMessage(common.prefix + ChatColor.AQUA + "Creating new zone '" + name + "'.");
+							} else {
+								sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA + "There is a already" +
+										" a new zone in queue. Commit or discard be fore continuing.");
+							}
+							
+							return true;
+						} else if (args[1].equalsIgnoreCase("set")) {
+							Location targ = ((Player)sender).getTargetBlock(null, 128).getLocation();
+							String[] tmp = {String.valueOf(targ.getBlockX()),
+									String.valueOf(targ.getBlockY()),
+									String.valueOf(targ.getBlockZ())};
+							
+							if (args[2].equalsIgnoreCase("upper")) {
+								for (Integer i = 0; i < 3; i++) {
+									upper[i] = tmp[i];
+								}
+								
+								sender.sendMessage(common.prefix + ChatColor.AQUA + "Upper left-most point set to '" + upper[0] + ", " +
+										upper[1] + ", " + upper[2] + "'.");
+							} else if (args[2].equalsIgnoreCase("lower")) {
+								for (Integer i = 0; i < 3; i++) {
+									lower[i] = tmp[i];
+								}
+								
+								sender.sendMessage(common.prefix + ChatColor.AQUA + "Lower right-most point set to '" + lower[0] + ", " +
+										lower[1] + ", " + lower[2] + "'.");
+							} else {
+								sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA + "Valid set types are " +
+										"'upper' and 'lower'.");
+							}
+							
+							return true;
+						} else if (args[1].equalsIgnoreCase("order")) {
+							if (args[2].equalsIgnoreCase("allow,deny") || args[2].equalsIgnoreCase("deny,allow")) {
+								order = args[2];
+								
+								sender.sendMessage(common.prefix + ChatColor.AQUA + "Order set to '" + order + "'.");
+							} else if (args[2].endsWith(",")) {
+								if (args[2].startsWith("allow")) {
+									order = "allow,deny";
+									sender.sendMessage(common.prefix + ChatColor.DARK_AQUA + "Incomplete order. Inferring 'allow,deny'.");
+								} else if (args[2].startsWith("deny")) {
+									order = "deny,allow";
+									sender.sendMessage(common.prefix + ChatColor.DARK_AQUA + "Incomplete order. Inferring 'deny,allow'.");
+								} else {
+									sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA +
+										"Incomplete order. Could not infer order type.");	
+								}
+							} else {
+								sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA +
+										"Invalid order type.");
+							}
+						} else if (args[1].equalsIgnoreCase("allow") || args[1].equalsIgnoreCase("deny")) {
+							if (order != null) {
+								String[] oParts = order.split(",");
+								
+								if (args[1].equalsIgnoreCase(oParts[1])) {
+									acl = args[2];
+									
+									if (acl.endsWith(",")) {
+										sender.sendMessage(common.prefix + ChatColor.GREEN + "Non fatal error: " + ChatColor.DARK_AQUA +
+												"Comma at end of access list. Did you enter spaces?");
+									}
+									
+									sender.sendMessage(common.prefix + ChatColor.AQUA + "Access list is '" + acl + "'.");
+								} else {
+									sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA + 
+											"Given access type does not match order. Should be '" + oParts[1] + "'.");
+								}
+							} else {
+								sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA + "Order must be set first.");
+							}
+							
+							return true;
+						} else if (args[1].equalsIgnoreCase("commit")) {
+							
+						}
+					}
 			case 4:
 				if (args[0].equalsIgnoreCase("admin")) {
 					if (args[1].equalsIgnoreCase("change") && common.hasPerm(((Player)sender).getDisplayName(), "admin.change")) {
