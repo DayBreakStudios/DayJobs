@@ -30,7 +30,8 @@ public class DayJobsInventoryListener extends InventoryListener {
 		for (ItemStack item : armor) {
 			if (i > 3) { i = 3; }
 			
-			if (!common.checkMatch(item.getType().name(), player, "can-wear") && !(item.getType().name().equalsIgnoreCase("AIR"))) {
+			if (!common.checkMatch(item.getType().name(), player, "can-wear") && !(item.getType().name().equalsIgnoreCase("AIR")) &&
+					!common.hasPerm(player, "exempt")) {
 				Integer freeSlot = inv.firstEmpty();
 				
 				common.ifDebug("Match not found, removing '" + item.getType().name() + "' from '" + player + "'s equip slot.");
@@ -44,7 +45,7 @@ public class DayJobsInventoryListener extends InventoryListener {
 					inv.setItem(freeSlot, armor[i]);
 				} else {
 					Location loc = ev.getPlayer().getLocation();
-					loc.setZ(loc.getZ() + 2);
+					loc.setY(loc.getY() + 1);
 					
 					common.ifDebug("Player '" + player + "''s inventory is full. Spawning drop at '" + loc.getX() + ", " + loc.getY() + ", " + loc.getZ() + "'.");
 					

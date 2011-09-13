@@ -14,8 +14,8 @@ public class DayJobsCommands {
 	private DayJobs common;
 
 	private static String name = null;
-	private static String[] upper = null;
-	private static String[] lower = null;
+	private static Integer[] upper = {null, null, null};
+	private static Integer[] lower = {null, null, null};
 	private static String order = null;
 	private static String acl = null;
 	
@@ -194,7 +194,7 @@ public class DayJobsCommands {
 					if (args[0].equalsIgnoreCase("zone") && common.hasPerm(((Player)sender).getDisplayName(), "admin.zones")) {
 						if (args[1].equalsIgnoreCase("create")) {
 							if (name == null) {
-								name = args[1];
+								name = args[2];
 								
 								sender.sendMessage(common.prefix + ChatColor.AQUA + "Creating new zone '" + name + "'.");
 							} else {
@@ -205,9 +205,9 @@ public class DayJobsCommands {
 							return true;
 						} else if (args[1].equalsIgnoreCase("set")) {
 							Location targ = ((Player)sender).getTargetBlock(null, 128).getLocation();
-							String[] tmp = {String.valueOf(targ.getBlockX()),
-									String.valueOf(targ.getBlockY()),
-									String.valueOf(targ.getBlockZ())};
+							Integer[] tmp = {targ.getBlockX(),
+									targ.getBlockY(),
+									targ.getBlockZ()};
 							
 							if (args[2].equalsIgnoreCase("upper")) {
 								for (Integer i = 0; i < 3; i++) {
@@ -249,6 +249,8 @@ public class DayJobsCommands {
 								sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA +
 										"Invalid order type.");
 							}
+							
+							return true;
 						} else if (args[1].equalsIgnoreCase("allow") || args[1].equalsIgnoreCase("deny")) {
 							if (order != null) {
 								String[] oParts = order.split(",");
@@ -272,7 +274,39 @@ public class DayJobsCommands {
 							
 							return true;
 						} else if (args[1].equalsIgnoreCase("commit")) {
+							if (name != null && upper[0] != null && lower[0] != null && order != null && acl != null) {
+								if (args[2].equalsIgnoreCase("yes")) {
+									if (common.createZone(name, upper, lower, order, acl)) {
+										sender.sendMessage(common.prefix + ChatColor.AQUA + "New zone '" + name + "' created successfully.");
+									
+										clearVars();
+									} else {
+										sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA + 
+												"Could not save new zone...");
+									}
+								} else {
+									clearVars();
+									sender.sendMessage(common.prefix + ChatColor.AQUA + "Zone changes discarded.");
+								}
+							} else {
+								sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA + 
+										"Cannot commit. All zone options must be set first.");
+							}
 							
+							return true;
+						} else if (args[1].equalsIgnoreCase("delete")) {
+							if (common.zoneExists(args[2])) {
+								if (common.deleteZone(args[2])) {
+									sender.sendMessage(common.prefix + ChatColor.AQUA + "Zone '" + args[2] + "' deleted.");
+								} else {
+									sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA +
+											"There was a problem deleting zone '" + args[2] + "'.");
+								}
+							}
+							
+							return true;
+						} else {
+							return false;
 						}
 					}
 			case 4:
@@ -322,6 +356,16 @@ public class DayJobsCommands {
 		}
 		
 		return false;
+	}
+	
+	private void clearVars() {
+		for (Integer i = 0; i < 3; i++) {
+			upper[i] = null;
+			lower[i] = null;
+		}
+		name = null;
+		order = null;
+		acl = null;
 	}
 }
 

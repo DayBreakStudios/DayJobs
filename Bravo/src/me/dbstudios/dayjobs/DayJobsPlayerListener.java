@@ -1,6 +1,7 @@
 package me.dbstudios.dayjobs;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerListener;
@@ -31,19 +32,18 @@ public class DayJobsPlayerListener extends PlayerListener{
 	
 	@Override
 	public void onPlayerInteract(PlayerInteractEvent ev) {
-		if (ev.getItem() != null) {
+		String player = ev.getPlayer().getDisplayName();
+		
+		if (ev.getItem() != null && ev.getAction().name().equalsIgnoreCase("LEFT_CLICK_BLOCK")) {
 			String used = ev.getItem().getType().name();
-			String player = ev.getPlayer().getDisplayName();
 			common.ifDebug("Caught PlayerInteractEvent for '" + player + "'.");
 		
-			Boolean matched = common.checkMatch(used, player, "can-place");
-			if (!matched) {
-				matched = common.checkMatch(used, player, "can-use");
-			}
-		
-			if (!matched && !common.hasPerm(player, "exempt")) {
+			Boolean matched = common.checkMatch(used, player, "can-use");		
+			if (!matched && !common.hasPerm(player, "exempt") && !ev.isCancelled()) {
 				common.ifDebug("PlayerInteractEvent canceled for '" + player + "'.");
 				ev.setCancelled(true);
+				ev.getPlayer().sendMessage(common.prefix + ChatColor.DARK_GREEN + "Notice: " + ChatColor.AQUA +
+						"Your job class may not use this item.");
 			}
 		}
 	}
@@ -55,7 +55,7 @@ public class DayJobsPlayerListener extends PlayerListener{
 		 *  all fields.
 		 * 
 		 */
-		if (common.getConfig("allow-all-inventory") == "false" && !common.hasPerm(ev.getPlayer().getDisplayName(), "exempt")) {
+		if (common.getConfig("allow-all-inventory").equalsIgnoreCase("false") && !common.hasPerm(ev.getPlayer().getDisplayName(), "exempt")) {
 			String item = ev.getItem().getItemStack().getType().name();
 			String player = ev.getPlayer().getDisplayName();
 			
@@ -67,6 +67,8 @@ public class DayJobsPlayerListener extends PlayerListener{
 			
 			if (ev.isCancelled()) {
 				common.ifDebug("PlayerPickupItemEvent cancelled for '" + player + "'.");
+				ev.getPlayer().sendMessage(common.prefix + ChatColor.DARK_GREEN + "Notice: " + ChatColor.AQUA +
+						"Your job class may not pick up this item.");
 			}
 		}
 	}
@@ -74,58 +76,68 @@ public class DayJobsPlayerListener extends PlayerListener{
 	@Override
 	public void onPlayerMove(PlayerMoveEvent ev) {
 		String player = ev.getPlayer().getDisplayName();
-		Double[] locat = {ev.getPlayer().getLocation().getX(),
-				ev.getPlayer().getLocation().getY(),
-				ev.getPlayer().getEyeHeight(true)};
 		Boolean isWithin = false;
 		String inZone = null;
 		
-		if (common.getZones() != null) {
+		if (common.getZones() != null && !common.hasPerm(player, "exempt")) {
 			for (String zone : common.getZones()) {
-				Integer[] upper = common.getZoneCoords(zone, "upper");
-				Integer[] lower = common.getZoneCoords(zone, "lower");
-			
-				for (Integer i = 0; i < 3; i++) {
-					if (common.isWithin(lower[i], locat[i], upper[i])) {
-						isWithin = true;
-						inZone = zone;
-						break;
-					}
-				}
-			}
-		}		
-		
-		if (inZone != null && isWithin) {
-			String job = common.getJob(player);
-			String order = common.getZoneInfo(inZone, "order");
-			Boolean permit;
-			
-			if (order.startsWith("allow")) {
-				String[] denyFrom = common.parseToList(common.getZoneInfo(inZone, "deny-from"));
-				
-				permit = true;
-				
-				for (String deny : denyFrom) {
-					if (deny.equalsIgnoreCase(job) || deny.equalsIgnoreCase("all")) {
-						permit = false;
-						break;
-					}
-				}
-			} else {
-				String[] allowFrom = common.parseToList(common.getZoneInfo(inZone, "allow-from"));
-				
-				permit = false;
-				
-				for (String allow : allowFrom) {
-					if (allow.equalsIgnoreCase(job) || allow.equalsIgnoreCase("all")) {
-						permit = true;
-						break;
-					}
+				if (common.isWithin(player, zone)) {
+					isWithin = true;
+					inZone = zone;
+					break;
 				}
 			}
 			
-			if (!permit) {
-				ev.getPlayer().sendMessage(ChatColor.DARK_AQUA + common.prefix + common.getZoneInfo(inZone, "deny-message"));
+			if (isWithin) {
+				String[] order = common.getZoneInfo(inZone, "order").split(",");
+				String[] acl = common.getZoneInfo(inZone, order[1] + "-from").split(",");
+				Boolean found = false;
+				Boolean cancel = false;
+				
+				for (String job : acl) {
+					if (common.getJob(player).equalsIgnoreCase(job)) {
+						found = true;
+						break;
+					}
+				}
+				
+				if (order[1].equalsIgnoreCase("allow")) {
+					if (found) {
+						cancel = false;
+					} else {
+						cancel = true;
+					}
+				} else if (order[1].equalsIgnoreCase("deny")) {
+					if (found) {
+						cancel = true;
+					} else {
+						cancel = false;
+					}
+				}
+				
+				if (cancel) {
+					ev.getPlayer().sendMessage(common.prefix + ChatColor.DARK_AQUA + common.getZoneInfo(inZone, "deny-message"));
+					Location newLoc = ev.getTo();
+					
+					switch (common.getDirection(ev.getFrom(), ev.getTo())) {
+					case 0:
+						newLoc.setZ(newLoc.getZ() - 1.5d);
+						break;
+					case 1:
+						newLoc.setX(newLoc.getX() + 1.5d);
+						break;
+					case 2:
+						newLoc.setZ(newLoc.getZ() + 1.5d);
+						break;
+					case 3:
+						newLoc.setX(newLoc.getX() - 1.5d);
+						break;
+					default:
+						common.ifDebug("Error: Could not determine '" + ev.getPlayer().getDisplayName() + "'s direction.");						
+					}
+					
+					ev.getPlayer().teleport(newLoc);
+				}
 			}
 		}
 	}
