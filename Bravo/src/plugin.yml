@@ -1,9 +1,10 @@
 name: DayJobs
 description: A job class handler by Daybreak Studios
 author: Daybreak Studios
-softdepends: [Spout, Permissions]
+softdepends: [Permissions]
+depends: [Spout]
 main: me.dbstudios.dayjobs.DayJobs
-version: 1.2
+version: 1.3
 commands:
     job:
         description: DayJobs commands.

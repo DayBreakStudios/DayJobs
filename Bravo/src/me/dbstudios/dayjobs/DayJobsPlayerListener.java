@@ -39,7 +39,7 @@ public class DayJobsPlayerListener extends PlayerListener{
 			common.ifDebug("Caught PlayerInteractEvent for '" + player + "'.");
 		
 			Boolean matched = common.checkMatch(used, player, "can-use");		
-			if (!matched && !common.hasPerm(player, "exempt") && !ev.isCancelled()) {
+			if (!matched && !common.isExempt(player) && !ev.isCancelled()) {
 				common.ifDebug("PlayerInteractEvent canceled for '" + player + "'.");
 				ev.setCancelled(true);
 				ev.getPlayer().sendMessage(common.prefix + ChatColor.DARK_GREEN + "Notice: " + ChatColor.AQUA +
@@ -55,7 +55,7 @@ public class DayJobsPlayerListener extends PlayerListener{
 		 *  all fields.
 		 * 
 		 */
-		if (common.getConfig("allow-all-inventory").equalsIgnoreCase("false") && !common.hasPerm(ev.getPlayer().getDisplayName(), "exempt")) {
+		if (common.getConfig("allow-all-inventory").equalsIgnoreCase("false") && !common.isExempt(ev.getPlayer().getDisplayName())) {
 			String item = ev.getItem().getItemStack().getType().name();
 			String player = ev.getPlayer().getDisplayName();
 			
@@ -79,7 +79,7 @@ public class DayJobsPlayerListener extends PlayerListener{
 		Boolean isWithin = false;
 		String inZone = null;
 		
-		if (common.getZones() != null && !common.hasPerm(player, "exempt")) {
+		if (common.getZones() != null && !common.isExempt(player)) {
 			for (String zone : common.getZones()) {
 				if (common.isWithin(player, zone)) {
 					isWithin = true;

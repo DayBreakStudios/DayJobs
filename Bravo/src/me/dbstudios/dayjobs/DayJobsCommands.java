@@ -27,7 +27,7 @@ public class DayJobsCommands {
 		if (label.equalsIgnoreCase("job")) {
 			switch (args.length) {
 				case 1:
-					if (args[0].equalsIgnoreCase("list") && common.hasPerm(((Player)sender).getDisplayName(), "player.list")) {
+					if (args[0].equalsIgnoreCase("list") && common.hasPerm(((Player)sender).getDisplayName(), "player.list", false)) {
 						List<String> jobs = common.getJobList();
 
 						sender.sendMessage(common.prefix + "Available jobs:");
@@ -42,30 +42,35 @@ public class DayJobsCommands {
 						}
 
 						return true;
-					} else if (args[0].equalsIgnoreCase("info") && common.hasPerm(((Player)sender).getDisplayName(), "player.info")) {
-						String job = common.parseToLine(common.getJob(((Player)sender).getDisplayName()));
-						String bio = common.parseToLine(common.getInfo(job, "bio"));
-						String fname = common.parseToLine(common.getInfo(job, "friendly-name"));
+					} else if (args[0].equalsIgnoreCase("info") && common.hasPerm(((Player)sender).getDisplayName(), "player.info", false)) {
+						String job = common.getJob(((Player)sender).getDisplayName());
+						String bio = common.getInfo(job, "bio");
+						String fname = common.getInfo(job, "friendly-name");
 						String canPlace = common.parseToLine(common.getInfo(job, "can-place"));
 						String canUse = common.parseToLine(common.getInfo(job, "can-use"));
-						//String canWear = common.parseToLine(common.getInfo(job, "can-wear"));
+						String canWear = common.parseToLine(common.getInfo(job, "can-wear"));
+						String canBreak = common.parseToLine(common.getInfo(job, "can-break"));
 						
-						if (canPlace.length() == 0) {
+						if (canPlace == null) {
 							canPlace = "Nothing";
 						}
-						if (canUse.length() == 0) {
+						if (canUse == null) {
 							canUse = "Nothing";
 						}
-						//if (canWear.length() == 0) {
-						//	canWear = "Nothing";
-						//}
+						if (canWear == null) {
+							canWear = "Nothing";
+						}
+						if (canBreak  == null) {
+							canBreak = "Nothing";
+						}
 
 						sender.sendMessage(common.prefix + "Job info for '" + job + "'");
 						sender.sendMessage(ChatColor.AQUA + "--> Name: " + ChatColor.DARK_AQUA + fname);
 						sender.sendMessage(ChatColor.AQUA + "--> Bio: " + ChatColor.DARK_AQUA + bio);
 						sender.sendMessage(ChatColor.AQUA + "--> Can place: " + ChatColor.DARK_AQUA + canPlace);
 						sender.sendMessage(ChatColor.AQUA + "--> Can use: " + ChatColor.DARK_AQUA + canUse);
-						//sender.sendMessage(ChatColor.AQUA + "--> Can wear: " + ChatColor.DARK_AQUA + canWear);
+						sender.sendMessage(ChatColor.AQUA + "--> Can wear: " + ChatColor.DARK_AQUA + canWear);
+						sender.sendMessage(ChatColor.AQUA + "--> Can break: " + ChatColor.DARK_AQUA + canBreak);
 
 						return true;
                     } else if (args[0].equalsIgnoreCase("help")) {
@@ -86,7 +91,7 @@ public class DayJobsCommands {
 					}
 					
 				case 2:
-					if (args[0].equalsIgnoreCase("change") && common.hasPerm(((Player)sender).getDisplayName(), "player.change")) {
+					if (args[0].equalsIgnoreCase("change") && common.hasPerm(((Player)sender).getDisplayName(), "player.change", false)) {
 						if (common.jobExists(args[1])) {
 							String time = (new SimpleDateFormat("M/d @ h:mm a").format(Calendar.getInstance().getTime()));
 
@@ -98,7 +103,7 @@ public class DayJobsCommands {
 
 							return true;
 						}
-					} else if (args[0].equalsIgnoreCase("whois") && common.hasPerm(((Player)sender).getDisplayName(), "player.whois")) {
+					} else if (args[0].equalsIgnoreCase("whois") && common.hasPerm(((Player)sender).getDisplayName(), "player.whois", false)) {
 						String job = common.getJob(args[1]);
 
 						if (job != null) {
@@ -110,44 +115,49 @@ public class DayJobsCommands {
 						}
 
 						return true;
-					} else if (args[0].equalsIgnoreCase("info") && common.hasPerm(((Player)sender).getDisplayName(), "player.info")) {
+					} else if (args[0].equalsIgnoreCase("info") && common.hasPerm(((Player)sender).getDisplayName(), "player.info", false)) {
 						if (common.jobExists(args[1])) {
 							String job = args[1];
-							String bio = common.parseToLine(common.getInfo(job, "bio"));
-							String fname = common.parseToLine(common.getInfo(job, "friendly-name"));
+							String bio = common.getInfo(job, "bio");
+							String fname = common.getInfo(job, "friendly-name");
 							String canPlace = common.parseToLine(common.getInfo(job, "can-place"));
 							String canUse = common.parseToLine(common.getInfo(job, "can-use"));
-							//String canWear = common.parseToLine(common.getInfo(job, "can-wear"));
+							String canWear = common.parseToLine(common.getInfo(job, "can-wear"));
+							String canBreak = common.parseToLine(common.getInfo(job, "can-break"));
 							
-							if (canPlace.length() == 0) {
+							if (canPlace == null) {
 								canPlace = "Nothing";
 							}
-							if (canUse.length() == 0) {
+							if (canUse == null) {
 								canUse = "Nothing";
 							}
-							//if (canWear.length() == 0) {
-							//	canWear = "Nothing";
-							//}
+							if (canWear == null) {
+								canWear = "Nothing";
+							}
+							if (canBreak  == null) {
+								canBreak = "Nothing";
+							}
 	
 							sender.sendMessage(common.prefix + "Job info for '" + job + "'");
 							sender.sendMessage(ChatColor.AQUA + "--> Name: " + ChatColor.DARK_AQUA + fname);
 							sender.sendMessage(ChatColor.AQUA + "--> Bio: " + ChatColor.DARK_AQUA + bio);
 							sender.sendMessage(ChatColor.AQUA + "--> Can place: " + ChatColor.DARK_AQUA + canPlace);
 							sender.sendMessage(ChatColor.AQUA + "--> Can use: " + ChatColor.DARK_AQUA + canUse);
-							//sender.sendMessage(ChatColor.AQUA + "--> Can wear: " + ChatColor.DARK_AQUA + canWear);
+							sender.sendMessage(ChatColor.AQUA + "--> Can wear: " + ChatColor.DARK_AQUA + canWear);
+							sender.sendMessage(ChatColor.AQUA + "--> Can break: " + ChatColor.DARK_AQUA + canBreak);
 						} else {
 							sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA + "Job '" + args[1] + "' does not exist.");
 						}
 	
 						return true;
 					} else if (args[0].equalsIgnoreCase("admin")) {
-						if (args[1].equalsIgnoreCase("reload") && common.hasPerm(((Player)sender).getDisplayName(), "admin.reload")) {
+						if (args[1].equalsIgnoreCase("reload") && common.hasPerm(((Player)sender).getDisplayName(), "admin.reload", true)) {
 							common.reloadConf();
 							common.ifDebug("YAMLs reloaded by '" + ((Player)sender).getDisplayName());
 							sender.sendMessage(common.prefix + ChatColor.AQUA + "Reload successful.");
 							
 							return true;
-						} else if (args[1].equalsIgnoreCase("tickets") && common.hasPerm(((Player)sender).getDisplayName(), "admin.tickets")) {
+						} else if (args[1].equalsIgnoreCase("tickets") && common.hasPerm(((Player)sender).getDisplayName(), "admin.tickets", true)) {
 							List<String> tickets = common.getOpenTickets();
 	
 							sender.sendMessage(common.prefix + "Open tickets:");
@@ -163,12 +173,12 @@ public class DayJobsCommands {
 							}
 	
 							return true;
-						} else if (args[1].equalsIgnoreCase("debug") && common.hasPerm(((Player)sender).getDisplayName(), "admin.debug")) {
+						} else if (args[1].equalsIgnoreCase("debug") && common.hasPerm(((Player)sender).getDisplayName(), "admin.debug", true)) {
 							common.ifDebug("Player '" + ((Player)sender).getDisplayName() + "' toggled debug mode.");
 							common.toggleDebug();
 							
 							return true;
-						} else if (args[1].equalsIgnoreCase("help") && common.hasPerm(((Player)sender).getDisplayName(), "admin.help")) {
+						} else if (args[1].equalsIgnoreCase("help") && common.hasPerm(((Player)sender).getDisplayName(), "admin.help", true)) {
 							sender.sendMessage(common.prefix + "Admin commands and syntax:");
 							
 							sender.sendMessage(ChatColor.DARK_AQUA + "--> /job admin debug");
@@ -191,7 +201,7 @@ public class DayJobsCommands {
 					return false;
 					
 			case 3:
-					if (args[0].equalsIgnoreCase("zone") && common.hasPerm(((Player)sender).getDisplayName(), "admin.zones")) {
+					if (args[0].equalsIgnoreCase("zone") && common.hasPerm(((Player)sender).getDisplayName(), "admin.zones", true)) {
 						if (args[1].equalsIgnoreCase("create")) {
 							if (name == null) {
 								name = args[2];
@@ -308,18 +318,47 @@ public class DayJobsCommands {
 						} else {
 							return false;
 						}
+					} else if (args[0].equalsIgnoreCase("admin") && common.hasPerm(((Player)sender).getDisplayName(), "admin.exempt", true)) {
+						if (args[1].equalsIgnoreCase("exempt")) {
+							String player = common.getPlayerName(args[2]);
+							
+							if (player != null) {
+								if (common.toggleExempt(player)) {
+									sender.sendMessage(common.prefix + ChatColor.AQUA + "Toggled exempt on '" + player + "'.");
+									common.getPlayer(player).sendMessage(common.prefix + ChatColor.AQUA + ((Player)sender).getDisplayName() +
+											" has toggled exempt status on you.");
+								} else {
+									sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA +
+											"Could not toggle exempt on '" + player + "'.");
+								}
+							} else {
+								sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA + 
+										"Could not find player '" + args[2] + "'.");
+							}
+							
+							return true;
+						} else {
+							return false;
+						}
+					} else {
+						return false;
 					}
 			case 4:
 				if (args[0].equalsIgnoreCase("admin")) {
-					if (args[1].equalsIgnoreCase("change") && common.hasPerm(((Player)sender).getDisplayName(), "admin.change")) {
-						String player = args[2];
+					if (args[1].equalsIgnoreCase("change") && common.hasPerm(((Player)sender).getDisplayName(), "admin.change", true)) {
+						String player = common.getPlayerName(args[2]);
 						String job = args[3];
 
 						if (common.playerExists(player) && common.jobExists(job)) {
 							if (common.changeJob(player, job)) {
 								sender.sendMessage(common.prefix +
-									"Successfully changed '" + player +
-									"' to '" + job + "'");
+									"Successfully changed '" + player + "' to '" + job + "'");
+								
+								Player subject = common.getPlayer(player);
+								if (subject != null) {
+									subject.sendMessage(common.prefix + ChatColor.AQUA + "Your job has been changed to '" + job + "' by '" +
+											((Player)sender).getDisplayName() + "'.");
+								}
 							} else {
 								sender.sendMessage(common.prefix + ChatColor.RED + "Error: " +
 										ChatColor.DARK_AQUA + "Could not change '" + player + "' to '" + job + "'...");
@@ -333,7 +372,7 @@ public class DayJobsCommands {
 						}
 						
 						return true;
-					} else if (args[1].equalsIgnoreCase("tickets") && args[2].equalsIgnoreCase("close") && common.hasPerm(((Player)sender).getDisplayName(), "admin.tickets")) {
+					} else if (args[1].equalsIgnoreCase("tickets") && args[2].equalsIgnoreCase("close") && common.hasPerm(((Player)sender).getDisplayName(), "admin.tickets", true)) {
 						String ticket = args[3];
 						
 						if (common.ticketExists(ticket)) {
@@ -351,6 +390,8 @@ public class DayJobsCommands {
 					} else {
 						return false;
 					}
+				} else {
+					return false;
 				}
 			}
 		}
@@ -358,6 +399,10 @@ public class DayJobsCommands {
 		return false;
 	}
 	
+	/**
+	 * Clears all variables used to store temporary zone information
+	 * during creation.
+	 */
 	private void clearVars() {
 		for (Integer i = 0; i < 3; i++) {
 			upper[i] = null;

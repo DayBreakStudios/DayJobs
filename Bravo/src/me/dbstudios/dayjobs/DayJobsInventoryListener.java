@@ -31,7 +31,7 @@ public class DayJobsInventoryListener extends InventoryListener {
 			if (i > 3) { i = 3; }
 			
 			if (!common.checkMatch(item.getType().name(), player, "can-wear") && !(item.getType().name().equalsIgnoreCase("AIR")) &&
-					!common.hasPerm(player, "exempt")) {
+					!common.isExempt(player)) {
 				Integer freeSlot = inv.firstEmpty();
 				
 				common.ifDebug("Match not found, removing '" + item.getType().name() + "' from '" + player + "'s equip slot.");
