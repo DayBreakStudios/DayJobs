@@ -1,0 +1,14 @@
+zones:
+    test:
+        deny-message: A mysterious force pushes you away...
+        coords:
+            upper:
+                z: 136
+                y: 72
+                x: 47
+            lower:
+                z: 133
+                y: 68
+                x: 47
+        order: allow,deny
+        deny-from: RSE

@@ -1,3 +1,8 @@
 player:
     LartTyler:
         job: RSE
+        exempt: false
+    Trogdor9661:
+        job: Jobless
+    Beetroots:
+        job: Jobless

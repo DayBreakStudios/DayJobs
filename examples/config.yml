@@ -9,6 +9,7 @@ config:
         - STONE_SWORD
         - STONE_HOE
         - BOW
+        - WOODEN_DOOR
         can-place:
         - COBBLESTONE
         - DIRT
@@ -18,11 +19,25 @@ config:
         - TORCH
         - WOOL
         - WOODEN_DOOR
+        - FENCE
         can-wear:
         - LEATHER_HELMET
         - LEATHER_CHESTPLATE
         - LEATHER_LEGGINGS
         - LEATHER_BOOTS
+        can-break:
+        - COBBLESTONE
+        - DIRT
+        - COBBLESTONE_STAIRS
+        - WOOD_STAIRS
+        - STEP
+        - TORCH
+        - WOOL
+        - WOODEN_DOOR
+        - FENCE
+        damages:
+            FIRE: 0
+            FALL: 100
     jobs:
         Jobless:
             friendly-name: Jobless
@@ -52,6 +67,9 @@ config:
             - IRON_CHESTPLATE
             - IRON_LEGGINGS
             - IRON_BOOTS
+            can-break:
+            - DIRT
+            - COBBLESTONE
         RSE:
             friendly-name: Redstone Engineer
             bio: Affectionately dubbed 'Stoners', Redstone Engineers are masters at created RS devices.
@@ -61,8 +79,6 @@ config:
             - WOOD_SPADE
             - STONE_SPADE
             can-place:
-            - DIRT
-            - COBBLESTONE
             - REDSTONE_WIRE
             - REDSTONE_TORCH_ON
             - STONE_BUTTON
@@ -73,3 +89,52 @@ config:
             - DIODE_BLOCK_OFF
             - WOOD_PLATE
             can-wear: []
+            can-break:
+            - REDSTONE_WIRE
+            - REDSTONE_TORCH_ON
+            - STONE_BUTTON
+            - DISPENSER
+            - LEVER
+            - STONE_PLATE
+            - STONE_BUTTON
+            - DIODE_BLOCK_OFF
+            - WOOD_PLATE
+        Builder:
+            friendly-name: Builder
+            bio: A master of construction and design.
+            can-use:
+            - WOOD_AXE
+            - WOOD_SPADE
+            - WOOD_PICKAXE
+            - STONE_AXE
+            - STONE_SPADE
+            - STONE_PICKAXE
+            - IRON_AXE
+            - IRON_SPADE
+            - IRON_PICKAXE
+            - GOLD_AXE
+            - GOLD_SPADE
+            - GOLD_PICKAXE
+            can-place:
+            - ALL
+            can-wear: []
+            can-break:
+            - ALL
+        Smith:
+            friendly-name: Smith
+            bio: An artisan skilled in crafting and smelting, and can create nearly any good.
+            can-use: []
+            can-place:
+            - FURNACE
+            - CRAFTING_TABLE
+            can-wear: []
+            can-break:
+            - FURNACE
+            - CRAFTING_TABLE
+        Shopkeeper:
+            friendly-name: Shopkeeper
+            bio: A master of trading, the Shopkeeper provides comfort and accessibilty to the economy.
+            can-use: []
+            can-place: []
+            can-wear: []
+            can-break: []
