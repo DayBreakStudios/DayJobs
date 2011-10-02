@@ -10,9 +10,13 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 
 public class DayJobsPlayerListener extends PlayerListener{
 	private DayJobs common;
+	//private static double mult;
+	//private static double oldMult;
 	
 	public DayJobsPlayerListener(DayJobs instance) {
 		common = instance;
+		//mult = 1.0;
+		//oldMult = mult;
 	}
 	
 	@Override
@@ -140,5 +144,31 @@ public class DayJobsPlayerListener extends PlayerListener{
 				}
 			}
 		}
+		
+		/*
+		// Check for movement speed modifications, and modify speed accordingly
+		if (!common.isExempt(player)) {
+			Vector velocity = ev.getPlayer().getVelocity();
+			
+			oldMult = mult;
+			
+			common.ifDebug("oldMult = " + oldMult);
+			
+			velocity.multiply(1/mult); // Undo last velocity change
+			mult = common.getSpeed(player);
+			velocity.multiply(mult);
+			ev.getPlayer().setVelocity(velocity);
+			
+			common.ifDebug("mult = " + mult);
+			
+			if (mult > 1 && mult != oldMult) {
+				ev.getPlayer().sendMessage(common.prefix + ChatColor.AQUA + common.getSpdIncMsg());
+			} else if (mult < 1 && mult != oldMult) {
+				ev.getPlayer().sendMessage(common.prefix + ChatColor.AQUA + common.getSpdDecMsg());
+			} else if (mult == 1 && mult != oldMult){
+				ev.getPlayer().sendMessage(common.prefix + ChatColor.AQUA + common.getSpdNrmMsg());
+			}
+		}
+		*/
 	}
 }

@@ -39,6 +39,7 @@ public class DayJobs extends JavaPlugin {
 	private final DayJobsPlayerListener playerListener = new DayJobsPlayerListener(this);
 	private final DayJobsInventoryListener inventoryListener = new DayJobsInventoryListener(this);
 	private final DayJobsEntityListener entityListener = new DayJobsEntityListener(this);
+	private final DayJobsServerListener serverListener = new DayJobsServerListener(this);
 	
 	@Override
 	public void onEnable() {
@@ -51,6 +52,7 @@ public class DayJobs extends JavaPlugin {
 		manager.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.Normal, this);
 		manager.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Event.Priority.Normal, this);
 		manager.registerEvent(Event.Type.ENTITY_DAMAGE, entityListener, Event.Priority.Normal, this);
+		manager.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Event.Priority.Normal, this);
 		
 		if (setupSpout()) {
 			manager.registerEvent(Event.Type.CUSTOM_EVENT, inventoryListener, Event.Priority.Normal, this);
@@ -747,5 +749,89 @@ public class DayJobs extends JavaPlugin {
 	 */
 	public Boolean isExempt(String player) {
 		return (players.getBoolean("player." + player + ".exempt", false));
+	}
+	
+	/**
+	 * Gets the given player's speed as defined by the current block they are standing on, and
+	 * it's speed multiplier value in config.yml.
+	 * 
+	 * @param player	The player whose currently occupied block is being checked.
+	 * @return			An float value representative of what the player's speed
+	 * 					should be on that block, as defined by config.yml.
+	 */
+	public double getSpeed(String player) {
+		String block = getPlayer(player).getLocation().getBlock().getType().name();
+		List<String> keys = config.getKeys("config.jos." + getJob(player) + ".speeds");
+		double mult = 1.0;
+		
+		if (keys != null) {
+			for (String item : keys) {
+				if (item.equalsIgnoreCase(block)) {
+					mult = config.getDouble("config.jobs." + getJob(player) + ".speeds." + item, 1.0);
+					break;
+				}
+			}
+		}
+		
+		keys = config.getKeys("config.all.speeds");
+		
+		if (keys != null && mult == 1.0) {
+			for (String item : keys) {
+				if (item.equalsIgnoreCase(block)) {
+					mult = config.getDouble("config.all.speeds." + item, 1.0);
+					break;
+				}
+			}
+		}
+		
+		return mult;
+	}
+	
+	/**
+	 * Gets the message that should be displayed when a player's speed increases.
+	 * 
+	 * @return		A string value containing the message to display when a player's
+	 * 				speed increases.
+	 */
+	public String getSpdIncMsg() {
+		String toReturn = config.getString("config.speed-increase-msg");
+		
+		if (toReturn == null) {
+			toReturn = "You feel slightly faster...";
+		}
+		
+		return toReturn;
+	}
+	
+	/**
+	 * Gets the message that should be displayed when a player's speed decreases.
+	 * 
+	 * @return		A string value containing the message to display when a player's
+	 * 				speed decreases.
+	 */
+	public String getSpdDecMsg() {
+		String toReturn = config.getString("config.speed-decrease-msg");
+		
+		if (toReturn == null) {
+			toReturn = "You feel slightly slower...";
+		}
+		
+		return toReturn;
+	}
+	
+	/**
+	 * Gets the message that should be displayed when a player's speed returns to normal.
+	 * 
+	 * @return		A string value containing the message to display when a player's
+	 * 				speed returns to normal.
+	 */
+	public String getSpdNrmMsg() {
+		String toReturn = config.getString("config.speed.speed-normal-msg");
+		
+		if (toReturn == null) {
+			toReturn = "You feel normal again...";
+		}
+		
+		return toReturn;
 	}
 }
