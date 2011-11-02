@@ -22,6 +22,8 @@ public class DJServerListener extends ServerListener {
 			common.enablePermissions();
 		} else if (plugin.equalsIgnoreCase("PermissionsBukkit")) {
 			common.enablePermissionsBukkit();
+		} else if (plugin.equalsIgnoreCase("PermissionsEx")) {
+			common.enablePermissionsEx();
 		}
 	}
 }

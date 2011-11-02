@@ -1,8 +1,11 @@
 package me.dbstudios.dayjobs;
 
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityListener;
+import org.bukkit.inventory.ItemStack;
 
 public class DJEntityListener extends EntityListener {
 	DayJobs common;
@@ -26,6 +29,17 @@ public class DJEntityListener extends EntityListener {
 				}
 				
 				ev.setCancelled(true);
+			}
+		} else if (ev instanceof EntityDamageByEntityEvent) {
+			if (((EntityDamageByEntityEvent)ev).getDamager() instanceof Player) {
+				Player player = ((Player)((EntityDamageByEntityEvent)ev).getDamager());
+				ItemStack inHand = player.getItemInHand();
+				
+				if (!common.checkMatch(inHand.getType().name(), player.getName(), "can-use")) {
+					ev.setCancelled(true);
+					
+					player.sendMessage(common.prefix + ChatColor.DARK_AQUA + common.getUseDenyMsg(player.getName()));
+				}
 			}
 		}
 	}

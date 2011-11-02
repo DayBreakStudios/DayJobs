@@ -3,8 +3,10 @@ package me.dbstudios.dayjobs;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.getspout.spoutapi.event.inventory.InventoryClickEvent;
 import org.getspout.spoutapi.event.inventory.InventoryCloseEvent;
 import org.getspout.spoutapi.event.inventory.InventoryCraftEvent;
 import org.getspout.spoutapi.event.inventory.InventoryListener;
@@ -56,6 +58,22 @@ public class DJInventoryListener extends InventoryListener {
 			
 			ev.setCursor(item);
 			ev.getPlayer().sendMessage(common.prefix + ChatColor.DARK_AQUA + common.getCraftDenyMsg(player));
+		}
+	}
+	
+	@Override
+	public void onInventoryClick(InventoryClickEvent ev) {
+		if (ev.getSlotType().name().equalsIgnoreCase("SMELTING")) {
+			if (ev.getItem() != null) {
+				Player player = ev.getPlayer();
+				ItemStack item = ev.getItem();
+				
+				if (!common.checkMatch(item.getType().name(), player.getName(), "can-smelt")) {
+					ev.setCancelled(true);
+					
+					player.sendMessage(common.prefix + ChatColor.DARK_AQUA + common.getSmeltDenyMsg(player.getName()));
+				}
+			}
 		}
 	}
 }

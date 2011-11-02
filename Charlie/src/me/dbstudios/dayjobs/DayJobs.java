@@ -1,18 +1,26 @@
 package me.dbstudios.dayjobs;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.config.Configuration;
+
+import ru.tehkode.permissions.PermissionManager;
+import ru.tehkode.permissions.bukkit.PermissionsEx;
 
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
@@ -20,11 +28,16 @@ import com.nijikokun.bukkit.Permissions.Permissions;
 public class DayJobs extends JavaPlugin {
 	// Private variables
 	private final String defPath = "plugins" + File.separator + "dbstudios" + File.separator + "DayJobs" + File.separator;
-	private final Configuration config = new Configuration(new File(defPath + "config.yml"));
-	private final Configuration players = new Configuration(new File(defPath + "players.yml"));
-	private final Configuration tickets = new Configuration(new File(defPath + "tickets.yml"));
-	private final Configuration zones = new Configuration(new File(defPath + "zones.yml"));
-	private final Configuration spawns = new Configuration(new File(defPath + "spawns.yml"));
+	private FileConfiguration config;
+	private FileConfiguration players;
+	private FileConfiguration tickets;
+	private FileConfiguration zones;
+	private FileConfiguration spawns;
+	private final File configFile = new File(defPath + "config.yml");
+	private final File playersFile = new File(defPath + "players.yml");
+	private final File ticketsFile = new File(defPath + "tickets.yml");
+	private final File zonesFile = new File(defPath + "zones.yml");
+	private final File spawnsFile = new File(defPath + "spawns.yml");
 	private final Logger log = Logger.getLogger("Minecraft");
 	private PermissionHandler permHandler;
 	private DJBlockListener blockListener = new DJBlockListener(this);
@@ -35,22 +48,23 @@ public class DayJobs extends JavaPlugin {
 	private Boolean debug = false;
 	private Boolean usingPermissions = false;
 	private Boolean usingPermissionsBukkit = false;
+	private Boolean usingPermissionsEx = false;
 	@SuppressWarnings("unused")
 	private Boolean usingSpout = false;
 	
 	// Public variables
-	public final String version = "2.0";
+	public final String version = "2.1";
 	public final String prefix = "<DayJobs> ";
 	
 	@Override
 	public void onEnable() {
 		PluginManager manager = this.getServer().getPluginManager();
 		
-		config.load();
-		zones.load();
-		players.load();
-		tickets.load();
-		spawns.load();
+		config = YamlConfiguration.loadConfiguration(configFile);
+		players = YamlConfiguration.loadConfiguration(playersFile);
+		tickets = YamlConfiguration.loadConfiguration(ticketsFile);
+		zones = YamlConfiguration.loadConfiguration(zonesFile);
+		spawns = YamlConfiguration.loadConfiguration(spawnsFile);
 		
 		manager.registerEvent(Event.Type.BLOCK_PLACE, blockListener, Event.Priority.Normal, this);
 		manager.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Event.Priority.Normal, this);
@@ -77,6 +91,9 @@ public class DayJobs extends JavaPlugin {
 		debug = config.getBoolean("config.debug", false);
 		ifDebug("Verbose logging enabled.");
 		
+		ifDebug("Testing 'config.yml': Friendly name of Jobless: " + config.getString("config.jobs.Jobless.friendly-name", null));
+		ifDebug("Testing 'players.yml': Job of LartTyler: " + players.getString("players.LartTyler.job", null));
+		
 		log.info(prefix + "Version " + version + " enabled.");
 	}
 	
@@ -88,7 +105,7 @@ public class DayJobs extends JavaPlugin {
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if (label.equalsIgnoreCase("job")) {
-			return (new DJCommander(this)).tryCommand(sender, label, args);
+			return (new DJCommander(this)).tryCommand(sender, args);
 		} else {
 			return false;
 		}
@@ -102,14 +119,13 @@ public class DayJobs extends JavaPlugin {
 		
 		inventoryListener = new DJInventoryListener(this);
 		manager.registerEvent(Event.Type.CUSTOM_EVENT, inventoryListener, Event.Priority.Normal, this);
-		manager.registerEvent(Event.Type.CUSTOM_EVENT, inventoryListener, Event.Priority.Normal, this);
 		usingSpout = true;
 		
 		log.info(prefix + "Spout found and enabled, using " + manager.getPlugin("Spout").getDescription().getFullName() + ".");
 	}
 	
 	/**
-	 * Enables the use of Permissions.
+	 * Enables the use of Permissions by TheYeti.
 	 */
 	public void enablePermissions() {
 		PluginManager manager = this.getServer().getPluginManager();
@@ -120,6 +136,9 @@ public class DayJobs extends JavaPlugin {
 		log.info(prefix + "Permssions found and enabled, using " + manager.getPlugin("Permissions").getDescription().getFullName() + ".");
 	}
 	
+	/**
+	 * Enables the use of PermissionsBukkit.
+	 */
 	public void enablePermissionsBukkit() {
 		PluginManager manager = this.getServer().getPluginManager();
 		
@@ -128,9 +147,40 @@ public class DayJobs extends JavaPlugin {
 	}
 	
 	/**
+	 * Enables the use of PermissionsEx by t3hk0d3.
+	 */
+	public void enablePermissionsEx() {
+		PluginManager manager = this.getServer().getPluginManager();
+		
+		log.info(prefix + "PermissionsEx found and enabled, using " + manager.getPlugin("PermissionsEx").getDescription().getFullName() + ".");
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void addJobPerms(String player) {
+		if (usingPermissionsEx) {
+			PermissionManager manager = PermissionsEx.getPermissionManager();
+			List<String> nodes = (List<String>)config.getList("config.jobs." + getJob(player) + ".permissions");
+			
+			if (nodes != null) {
+				for (String node : nodes) {
+					manager.getUser(player).addPermission(node);
+				}
+			}
+		} else if (usingPermissionsBukkit) {
+			List<String> nodes = (List<String>)config.getList("config.jobs." + getJob(player) + ".permissions");
+			
+			if (nodes != null) {
+				for (String node : nodes) {
+					getPlayer(player).addAttachment(this, node, true);
+				}
+			}
+		}
+	}
+	
+	/**
 	 * Outputs additional debug logging to the console if debug is enabled.
 	 * 
-	 * @param msg	The message to output to the conosle.
+	 * @param msg	The message to output to the console.
 	 * @return		The debug state (if it is enabled or not).
 	 */
 	public Boolean ifDebug(String msg) {
@@ -158,6 +208,10 @@ public class DayJobs extends JavaPlugin {
 			hasPerm = permHandler.has(getPlayer(player), perm);
 		} else if (usingPermissionsBukkit) {
 			hasPerm = getPlayer(player).hasPermission(perm);
+		} else if (usingPermissionsEx) {
+			PermissionManager manager = PermissionsEx.getPermissionManager();
+			
+			hasPerm = manager.has(getPlayer(player), perm);
 		} else {
 			if (opOnly && getPlayer(player).isOp()) {
 				hasPerm = true;
@@ -186,7 +240,7 @@ public class DayJobs extends JavaPlugin {
 	 * @return			The display name of the Player whose name is closest to the pattern.
 	 */
 	public String getPlayerName(String pattern) {
-		return this.getServer().getPlayer(pattern).getDisplayName();
+		return this.getServer().getPlayer(pattern).getName();
 	}
 	
 	/**
@@ -194,7 +248,7 @@ public class DayJobs extends JavaPlugin {
 	 * 
 	 * @return The Configuration object handling config.yml.
 	 */
-	public Configuration getConfig() {
+	public FileConfiguration getConfigFile() {
 		return config;
 	}
 	
@@ -213,7 +267,7 @@ public class DayJobs extends JavaPlugin {
 	 * 
 	 * @return	The Configuration object handling players.yml.
 	 */
-	public Configuration getPlayerConfig() {
+	public FileConfiguration getPlayerConfig() {
 		return players;
 	}
 	
@@ -225,7 +279,7 @@ public class DayJobs extends JavaPlugin {
 	 * @return			The value located at the player's option path.
 	 */
 	public String getPlayerConfig(String player, String option) {
-		return players.getString("players." + player + "." + option);
+		return (players.getString("players." + player + "." + option));
 	}
 	
 	/**
@@ -233,7 +287,7 @@ public class DayJobs extends JavaPlugin {
 	 * 
 	 * @return		The Configuration object handling tickets.yml.
 	 */
-	public Configuration getTicket() {
+	public FileConfiguration getTicket() {
 		return tickets;
 	}
 	
@@ -243,7 +297,7 @@ public class DayJobs extends JavaPlugin {
 	 * @param player	The player whose ticket is being retrieved.
 	 * @return			An array containing the ticket info for the given player.<br />
 	 * 					The first element is the player's desired job, the second
-	 * 					is the timestamp of the request.
+	 * 					is the time stamp of the request.
 	 */
 	public String[] getTicket(String player) {
 		String[] ticket = {tickets.getString("tickets." + player + ".job"),
@@ -260,9 +314,15 @@ public class DayJobs extends JavaPlugin {
 	 * @return			A Boolean representation of the success of the operation.
 	 */
 	public Boolean setConfig(String path, String val) {
-		config.setProperty("config." + path, val);
-		config.save();
-		config.load();
+		config.set("config." + path, val);
+		
+		try {
+			config.save(configFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			
+			log.warning(prefix + "Error: 'config.yml' could not be written. Changes will not be saved.");
+		}
 		
 		return (config.getString("config." + path) == val);
 	}
@@ -276,21 +336,27 @@ public class DayJobs extends JavaPlugin {
 	 * @return			A Boolean representation of the success of the operation.
 	 */
 	public Boolean setPlayerConfig(String player, String path, String val) {
-		players.setProperty("players." + player + "." + path, val);
-		players.save();
-		players.load();
+		players.set("players." + player + "." + path, val);
+
+		try {
+			players.save(playersFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			
+			log.warning(prefix + "Error: 'players.yml' could not be written. Changes will not be saved.");
+		}
 		
 		return (players.getString("players." + player + "." + path) == val);
 	}
 	
 	/**
-	 * Gets the player's existance based on the presence of a set job class in players.yml.
+	 * Gets the player's existence based on the presence of a set job class in players.yml.
 	 * 
 	 * @param player	The player whose existence is being checked for.
 	 * @return			A Boolean representation of the player's presence is players.yml.
 	 */
 	public Boolean playerExists(String player) {
-		return (getPlayerConfig(player, "job") != null);
+		return (players.getString("players." + player + ".job", null) != null);
 	}
 	
 	/**
@@ -319,14 +385,21 @@ public class DayJobs extends JavaPlugin {
 	 * 
 	 * @param player	The player requesting the job change ticket.
 	 * @param job		The job that player is requesting a change to.
-	 * @param time		The timestamp of the change request.
+	 * @param time		The time stamp of the change request.
 	 * @return			A Boolean representation of the operation's success.
 	 */
 	public Boolean createTicket(String player, String job, String time) {
-		tickets.setProperty("tickets." + player + ".job", job);
-		tickets.setProperty("tickets." + player + ".time", time);
-		tickets.save();
-		tickets.load();
+		tickets.createSection("tickets." + player);
+		tickets.set("tickets." + player + ".job", job);
+		tickets.set("tickets." + player + ".time", time);
+
+		try {
+			tickets.save(ticketsFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			
+			log.warning(prefix + "Error: 'tickets.yml' could not be written. Changes will not be saved.");
+		}
 		
 		return ticketExists(player);
 	}
@@ -338,9 +411,15 @@ public class DayJobs extends JavaPlugin {
 	 * @return			A Boolean representation of the operation's success.
 	 */
 	public Boolean closeTicket(String player) {
-		tickets.removeProperty("tickets." + player);
-		tickets.save();
-		tickets.load();
+		tickets.set("tickets." + player, null);
+
+		try {
+			tickets.save(ticketsFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			
+			log.warning(prefix + "Error: 'tickets.yml' could not be written. Changes will not be saved.");
+		}
 		
 		return (!ticketExists(player));
 	}
@@ -364,33 +443,46 @@ public class DayJobs extends JavaPlugin {
 	 * @param type		The type of permit to check.
 	 * @return			A Boolean value representative of the presence of a match.
 	 */
+	@SuppressWarnings("unchecked")
 	public Boolean checkMatch(String item, String player, String type) {
 		String job = getJob(player);
 		Boolean matched = false;
-		List<String> values = config.getStringList("config.all." + type, null);
 		
-		if (values != null) {
-			for (String val : values) {
-				if (val.equalsIgnoreCase("NOTHING")) {
-					break;
-				} else if (val.equalsIgnoreCase(item) || val.equalsIgnoreCase("ALL")) {
-					matched = true;
-					break;
-				}
+		List<String> vals = (List<String>)config.getList("config.all." + type, null);
+		
+		for (String val : vals) {
+			if (val.equalsIgnoreCase(item)) {
+				matched = true;
+				break;
+			} else if (val.startsWith("-") && val.endsWith(item)) {
+				matched = false;
+				break;
+			} else if (val.startsWith("+") && val.endsWith(item)) {
+				matched = true;
+				break;
+			} else if (val.equalsIgnoreCase("ALL")) {
+				matched = true;
+			} else if (val.equalsIgnoreCase("NONE") || val.equalsIgnoreCase("NOTHING")) {
+				matched = false;
 			}
 		}
 		
-		values = config.getStringList("config.jobs." + job + "." + type, null);
+		vals = (List<String>)config.getList("config.jobs." + job + "." + type, null);
 		
-		if (values != null) {
-			for (String val : values) {
-				if (val.equalsIgnoreCase("NOTHING")) {
-					matched = false;
-					break;
-				} else if (val.equalsIgnoreCase(item) || val.equalsIgnoreCase("ALL")) {
-					matched = true;
-					break;
-				}
+		for (String val : vals) {
+			if (val.equalsIgnoreCase(item)) {
+				matched = true;
+				break;
+			} else if (val.startsWith("-") && val.endsWith(item)) {
+				matched = false;
+				break;
+			} else if (val.startsWith("+") && val.endsWith(item)) {
+				matched = true;
+				break;
+			} else if (val.equalsIgnoreCase("ALL")) {
+				matched = true;
+			} else if (val.equalsIgnoreCase("NONE") || val.equalsIgnoreCase("NOTHING")) {
+				matched = false;
 			}
 		}
 		
@@ -405,7 +497,7 @@ public class DayJobs extends JavaPlugin {
 	 * 					if the player is not in a zone.
 	 */
 	public String getInZone(String player) {
-		List<String> zoneList = zones.getKeys("zones");
+		Set<String> zoneList = zones.getConfigurationSection("zones").getKeys(false);
 		String inZone = null;
 		
 		if (zoneList != null) {
@@ -477,22 +569,30 @@ public class DayJobs extends JavaPlugin {
 	 * @return			Returns true if zone exists as determined by zoneExists.
 	 */
 	public Boolean createZone(String name, Integer[] upper, Integer[] lower, String order, String acl) {
-		String base = "zones." + name + ".";
+		String base = "zones." + name;
 		String[] tmp = order.split(",");
 		String fromType = tmp[1];
 		
-		zones.setProperty(base + "order", order);
-		zones.setProperty(base + fromType + "-from", acl);
-		zones.setProperty(base + "deny-msg", "A mysterious force pushes you away...");
-		zones.setProperty(base + "coords.upper.x", upper[0]);
-		zones.setProperty(base + "coords.upper.y", upper[1]);
-		zones.setProperty(base + "coords.upper.z", upper[2]);
-		zones.setProperty(base + "coords.lower.x", lower[0]);
-		zones.setProperty(base + "coords.lower.y", lower[1]);
-		zones.setProperty(base + "coords.lower.z", lower[2]);
+		zones.createSection(base);
+		
+		base = base + ".";
+		zones.set(base + "order", order);
+		zones.set(base + fromType + "-from", acl);
+		zones.set(base + "deny-msg", "A mysterious force pushes you away...");
+		zones.set(base + "coords.upper.x", upper[0]);
+		zones.set(base + "coords.upper.y", upper[1]);
+		zones.set(base + "coords.upper.z", upper[2]);
+		zones.set(base + "coords.lower.x", lower[0]);
+		zones.set(base + "coords.lower.y", lower[1]);
+		zones.set(base + "coords.lower.z", lower[2]);
 			
-		zones.save();
-		zones.load();
+		try {
+			zones.save(zonesFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			
+			log.warning(prefix + "Error: 'zones.yml' could not be written. Changes will not be saved.");
+		}
 			
 		return (zoneExists(name));
 	}
@@ -504,9 +604,15 @@ public class DayJobs extends JavaPlugin {
 	 * @return			A Boolean value representative of the success of the operation.
 	 */
 	public Boolean deleteZone(String zone) {
-		zones.removeProperty("zones." + zone);
-		zones.save();
-		zones.load();
+		zones.set("zones." + zone, null);
+
+		try {
+			zones.save(zonesFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			
+			log.warning(prefix + "Error: 'zones.yml' could not be written. Changes will not be saved.");
+		}
 		
 		return (!zoneExists(zone));
 	}
@@ -560,10 +666,13 @@ public class DayJobs extends JavaPlugin {
 	 */
 	public int getDamage(String player, DamageCause dCause, int defaultDamage) {
 		String job = getJob(player);
-		List<String> damages = config.getKeys("config.all.damages");
+		ConfigurationSection section = config.getConfigurationSection("config.all.damages");
+		Set<String> damages;
 		int damage = defaultDamage;
 		
-		if (damages != null) {
+		if (section != null) {
+			damages = section.getKeys(false);
+			
 			for (String item : damages) {
 				if (item.equalsIgnoreCase(dCause.name())) {
 					damage = config.getInt("config.all.damages." + item, defaultDamage);
@@ -572,9 +681,11 @@ public class DayJobs extends JavaPlugin {
 			}
 		}
 		
-		damages = config.getKeys("config.jobs." + job + ".damages");
+		section = config.getConfigurationSection("config.jobs." + job + ".damages");
 		
-		if (damages != null) {
+		if (section != null) {
+			damages = section.getKeys(false);
+			
 			for (String item : damages) {
 				if (item.equalsIgnoreCase(dCause.name())) {
 					damage = config.getInt("config.jobs." + job + ".damages." + item, defaultDamage);
@@ -592,7 +703,7 @@ public class DayJobs extends JavaPlugin {
 	 * @return		The String to output when block placement is denied.
 	 */
 	public String getPlaceDenyMsg(String player) {
-		String msg = config.getString("config.place-deny-msg");
+		String msg = config.getString("config.messages.place-deny-msg");
 		
 		if (msg == null) {
 			msg = "You may not place this type of block.";
@@ -608,7 +719,7 @@ public class DayJobs extends JavaPlugin {
 	 * @return		The String to output when block break is denied.
 	 */
 	public String getBreakDenyMsg(String player) {
-		String msg = config.getString("config.break-deny-msg");
+		String msg = config.getString("config.messages.break-deny-msg");
 		
 		if (msg == null) {
 			msg = "You may not break this type of block.";
@@ -625,7 +736,7 @@ public class DayJobs extends JavaPlugin {
 	 * @return		The String to output when item usage is denied.
 	 */
 	public String getUseDenyMsg(String player) {
-		String msg = config.getString("config.use-deny-msg");
+		String msg = config.getString("config.messages.use-deny-msg");
 		
 		if (msg == null) {
 			msg = "You may not use type of item.";
@@ -642,7 +753,7 @@ public class DayJobs extends JavaPlugin {
 	 * @return		The String to output when armor usage is denied.
 	 */
 	public String getWearDenyMsg(String player) {
-		String msg = config.getString("config.wear-deny-msg");
+		String msg = config.getString("config.messages.wear-deny-msg");
 		
 		if (msg == null) {
 			msg = "You may not wear this type of armor.";
@@ -659,7 +770,7 @@ public class DayJobs extends JavaPlugin {
 	 * @return		The String to output when an item is dropped as a result of denied armor.
 	 */
 	public String getWearDenyInvFullMsg(String player) {
-		String msg = config.getString("config.wear-deny-inv-full-msg");
+		String msg = config.getString("config.messages.wear-deny-inv-full-msg");
 		
 		if (msg == null) {
 			msg = "Your inventory is full. The item has been dropped.";
@@ -677,7 +788,7 @@ public class DayJobs extends JavaPlugin {
 	 * @return			The message to display to the new player.
 	 */
 	public String getNewPlayerMsg(String player) {
-		String msg = config.getString("config.new-player-msg");
+		String msg = config.getString("config.messages.new-player-msg");
 		
 		if (msg == null) {
 			msg = "Welcome, %p. You have joined as %j. Type /job help for more info.";
@@ -691,13 +802,33 @@ public class DayJobs extends JavaPlugin {
 	/**
 	 * Gets the message to display when a user is denied access to a zone.
 	 * 
-	 * @return		The message to display to the player.
+	 * @param player	The player the message is being displayed to.
+	 * @param zone		The zone the player is in.
+	 * @return			The message to display to the player.
 	 */
 	public String getZoneDenyMsg(String zone, String player) {
 		String msg = zones.getString("zones." + zone + "deny-msg");
 		
 		if (msg == null) {
 			msg = "A mysterious force pushes you away...";
+		}
+		
+		msg = parseSpecialChars(msg, player);
+		
+		return msg;
+	}
+	
+	/**
+	 * Gets the message to display when a player is denied smelting.
+	 * 
+	 * @param player	The name of the player involved.
+	 * @return			The message to display to the player.
+	 */
+	public String getSmeltDenyMsg(String player) {
+		String msg = config.getString("config.messages.smelt-deny-msg");
+		
+		if (msg == null) {
+			msg = "You're not sure how to cook that...";
 		}
 		
 		msg = parseSpecialChars(msg, player);
@@ -722,10 +853,17 @@ public class DayJobs extends JavaPlugin {
 	 * @return			Whether or not the player exists after the operation has run.
 	 */
 	public Boolean createPlayer(String player) {
-		players.setProperty("players." + player + ".job", config.getString("config.default-job"));
-		players.setProperty("players." + player + ".exempt", false);
-		players.save();
-		players.load();
+		players.createSection("players." + player);
+		players.set("players." + player + ".job", config.getString("config.default-job"));
+		players.set("players." + player + ".exempt", false);
+
+		try {
+			players.save(playersFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			
+			log.warning(prefix + "Error: 'players.yml' could not be written. Changes will not be saved.");
+		}
 		
 		return (playerExists(player));
 	}
@@ -736,8 +874,8 @@ public class DayJobs extends JavaPlugin {
  	 * @return		Returns a String List containing all jobs
 	 *				available to the players.
 	 */
-	public List<String> getJobList() {
-		return (config.getKeys("config.jobs"));
+	public Set<String> getJobList() {
+		return (config.getConfigurationSection("config.jobs").getKeys(false));
 	}
 	
 	/**
@@ -750,7 +888,7 @@ public class DayJobs extends JavaPlugin {
 	 *				If the option is not set, or can't be retrieved, null is returned.
 	 */
 	public String getInfo(String job, String node) {
-		return (config.getString("config.jobs." + job + "." + node));
+		return (config.getString("config.jobs." + job + "." + node, ""));
 	}
 	
 	/**
@@ -763,36 +901,43 @@ public class DayJobs extends JavaPlugin {
 	 *					version of a multi-item result from a getString
 	 *					{@link Configuration} call.
 	 */
-	public String parseToLine(String toParse) {
+	public String parseToLine(List<String> toParse) {
 		String toReturn = "";
-		ifDebug("parseToLine recieved: " + toParse);
 		
-		if (toParse.length() > 4) {
-			toParse = toParse.replace("[", "").replace("]", "").replace(",", ", ").replace("_", " ");
-			
-			for (String part : toParse.split(", ")) {
-				String first = part.substring(0, 1).toUpperCase();
-				String rest = part.substring(1, part.length()).toLowerCase();
-				toReturn = toReturn + first + rest + ", ";
-			}
-			
-			toReturn = toReturn.substring(0, toReturn.length() - 2);
-		} else {
-			toReturn = null;
+		for (String item : toParse) {
+			toReturn += item.toLowerCase() + ", ";
+		}
+		
+		toReturn = toReturn.substring(0, 1).toUpperCase() + toReturn.substring(1, toReturn.lastIndexOf(", "));
+		
+		if (toReturn.contains("_")) {
+			toReturn = toReturn.replace("_", " ");
 		}
 		
 		return toReturn;
 	}
 	
 	/**
-	 * Reloads all {@link Configuration} files used by DayJobs.
+	 * Reloads all {@link YamlConfiguration} files used by DayJobs.
 	 */
 	public void reloadConfigs() {
-		config.load();
-		zones.load();
-		players.load();
-		tickets.load();
-		spawns.load();
+		try {
+			config.load(configFile);
+			zones.load(zonesFile);
+			players.load(playersFile);
+			tickets.load(ticketsFile);
+			spawns.load(spawnsFile);
+		} catch (InvalidConfigurationException e) {
+			e.printStackTrace();
+			
+			log.severe(prefix + "Fatal error: One or more configuration files contain syntax errors. Plugin will be disabled.");
+			this.setEnabled(false);
+		} catch (IOException e) {
+			e.printStackTrace();
+			
+			log.severe(prefix + "Fatal error: One or more configuration files could not be found, or could not be read. Plugin will be disabled.");
+			this.setEnabled(false);
+		}
 	}
 	
 	/**
@@ -801,8 +946,8 @@ public class DayJobs extends JavaPlugin {
 	 * @return	A String List of all tickets, as listed in
 	 *			ticket.yml.
 	 */
-	public List<String> getOpenTickets() {
-		return (tickets.getKeys("tickets"));
+	public Set<String> getOpenTickets() {
+		return (tickets.getConfigurationSection("tickets").getKeys(false));
 	}
 	
 	/**
@@ -822,9 +967,15 @@ public class DayJobs extends JavaPlugin {
 	public Boolean toggleExempt(String player) {
 		Boolean exempt = players.getBoolean("players." + player + ".exempt", true);
 		
-		players.setProperty("players." + player + ".exempt", !exempt);
-		players.save();
-		players.load();
+		players.set("players." + player + ".exempt", !exempt);
+
+		try {
+			players.save(playersFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			
+			log.warning(prefix + "Error: 'players.yml' could not be written. Changes will not be saved.");
+		}
 		
 		return (!exempt == players.getBoolean("players." + player + ".exempt", false));
 	}
@@ -839,10 +990,15 @@ public class DayJobs extends JavaPlugin {
 	 */
 	public Boolean changeJob(String player, String job) {
 		if (playerExists(player) && jobExists(job)) {
-			players.setProperty("players." + player + ".job", job);
+			players.set("players." + player + ".job", job);
 			
-			players.save();
-			players.load();
+			try {
+				players.save(playersFile);
+			} catch (IOException e) {
+				e.printStackTrace();
+				
+				log.warning(prefix + "Error: 'players.yml' could not be written. Changes will not be saved.");
+			}
 
 			return (getJob(player).equalsIgnoreCase(job));
 		} else {
@@ -863,8 +1019,8 @@ public class DayJobs extends JavaPlugin {
 			spawn.setX(spawns.getDouble("death." + world + ".x", spawn.getX()));
 			spawn.setY(spawns.getDouble("death." + world + ".y", spawn.getY()));
 			spawn.setZ(spawns.getDouble("death." + world + ".z", spawn.getZ()));
-			spawn.setYaw(Float.parseFloat(spawns.getString("death." + world + ".yaw")));
-			spawn.setPitch(Float.parseFloat(spawns.getString("death." + world + ".pitch")));
+			spawn.setYaw((float)spawns.getDouble("death." + world + ".yaw"));
+			spawn.setPitch((float)(spawns.getDouble("death." + world + ".pitch")));
 		}
 		
 		return spawn;
@@ -879,36 +1035,41 @@ public class DayJobs extends JavaPlugin {
 	public Boolean setDeathSpawn(Location spawn) {
 		String path = "death." + spawn.getWorld().getName() + ".";
 		
-		spawns.setProperty(path + "x", spawn.getX());
-		spawns.setProperty(path + "y", spawn.getY());
-		spawns.setProperty(path + "z", spawn.getZ());
-		spawns.setProperty(path + "yaw", spawn.getYaw());
-		spawns.setProperty(path + "pitch", spawn.getPitch());
+		spawns.set(path + "x", spawn.getX());
+		spawns.set(path + "y", spawn.getY());
+		spawns.set(path + "z", spawn.getZ());
+		spawns.set(path + "yaw", spawn.getYaw());
+		spawns.set(path + "pitch", spawn.getPitch());
 		
-		spawns.save();
-		spawns.load();
+		try {
+			spawns.save(spawnsFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			
+			log.warning(prefix + "Error: 'spawns.yml' could not be written. Changes will not be saved.");
+		}
 		
 		return (deathSpawnExists(spawn.getWorld().getName()));
 	}
 	
 	/**
-	 * Gets the existance of a death spawn in world.
+	 * Gets the existence of a death spawn in world.
 	 * 
-	 * @param world		The world to check the existance of a death spawn for.
+	 * @param world		The world to check the existence of a death spawn for.
 	 * @return			A Boolean value representative of a death spawn in world.
 	 */
 	public Boolean deathSpawnExists(String world) {
-		return (spawns.getString("death." + world + ".x") != null);
+		return (spawns.get("death." + world + ".x") != null);
 	}
 	
 	/**
-	 * Gets the existance of a new player spawn in world.
+	 * Gets the existence of a new player spawn in world.
 	 * 
-	 * @param world		The world to check the existance of a new player spawn for.
+	 * @param world		The world to check the existence of a new player spawn for.
 	 * @return			A Boolean value representative of a new player spawn in world.
 	 */
 	public Boolean newPlayerSpawnExists(String world) {
-		return (spawns.getString("new-player-spawn." + world + ".x") != null);
+		return (spawns.get("new-player-spawn." + world + ".x") != null);
 	}
 	
 	/**
@@ -924,8 +1085,8 @@ public class DayJobs extends JavaPlugin {
 			spawn.setX(spawns.getDouble("new-player-spawn." + world + ".x", spawn.getX()));
 			spawn.setY(spawns.getDouble("new-player-spawn." + world + ".y", spawn.getY()));
 			spawn.setZ(spawns.getDouble("new-player-spawn." + world + ".z", spawn.getZ()));
-			spawn.setYaw(Float.parseFloat(spawns.getString("new-player-spawn." + world + ".yaw")));
-			spawn.setPitch(Float.parseFloat(spawns.getString("new-player-spawn." + world + ".pitch")));
+			spawn.setYaw((float)(spawns.getDouble("new-player-spawn." + world + ".yaw")));
+			spawn.setPitch((float)(spawns.getDouble("new-player-spawn." + world + ".pitch")));
 		}
 		
 		return spawn;
@@ -940,25 +1101,30 @@ public class DayJobs extends JavaPlugin {
 	public Boolean setNewPlayerSpawn(Location spawn) {
 		String path = "new-player-spawn." + spawn.getWorld().getName() + ".";
 		
-		spawns.setProperty(path + "x", spawn.getX());
-		spawns.setProperty(path + "y", spawn.getY());
-		spawns.setProperty(path + "z", spawn.getZ());
-		spawns.setProperty(path + "yaw", spawn.getYaw());
-		spawns.setProperty(path + "pitch", spawn.getPitch());
+		spawns.set(path + "x", spawn.getX());
+		spawns.set(path + "y", spawn.getY());
+		spawns.set(path + "z", spawn.getZ());
+		spawns.set(path + "yaw", spawn.getYaw());
+		spawns.set(path + "pitch", spawn.getPitch());
 		
-		spawns.save();
-		spawns.load();
+		try {
+			spawns.save(spawnsFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			
+			log.warning(prefix + "Error: 'spawns.yml' could not be written. Changes will not be saved.");
+		}
 		
-		return (deathSpawnExists(spawn.getWorld().getName()));
+		return (newPlayerSpawnExists(spawn.getWorld().getName()));
 	}
 	
 	/**
 	 * Gets the message to display when a crafting event is denied.
 	 * 
-	 * @return		The message to display to the player whose craft event was cancelled.
+	 * @return		The message to display to the player whose craft event was canceled.
 	 */
 	public String getCraftDenyMsg(String player) {
-		String msg = config.getString("config.craft-deny-msg");
+		String msg = config.getString("config.messages.craft-deny-msg");
 		
 		if (msg == null) {
 			msg = "The purpose of the materials in front of you evades you...";
@@ -985,11 +1151,11 @@ public class DayJobs extends JavaPlugin {
 	/**
 	 * Gets the message to display to players when the respawn.
 	 * 
-	 * @param player		The player who is recieving the respawn message.
-	 * @return				A String contianing the respawn message.
+	 * @param player		The player who is receiving the respawn message.
+	 * @return				A String containing the respawn message.
 	 */
 	public String getRespawnMsg(String player) {
-		String msg = config.getString("config.respawn-msg");
+		String msg = config.getString("config.messages.respawn-msg");
 		
 		if (msg == null) {
 			msg = "Welcom back, %p";

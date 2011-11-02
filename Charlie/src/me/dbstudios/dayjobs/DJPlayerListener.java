@@ -32,7 +32,7 @@ public class DJPlayerListener extends PlayerListener {
 	
 	@Override
 	public void onPlayerJoin(PlayerJoinEvent ev) {
-		String player = ev.getPlayer().getDisplayName();
+		String player = ev.getPlayer().getName();
 		
 		common.ifDebug("Player '" + player + "' has joined the server.");
 		if (!common.playerExists(player)) {
@@ -44,6 +44,8 @@ public class DJPlayerListener extends PlayerListener {
 				ev.getPlayer().getServer().broadcastMessage(common.prefix + ChatColor.DARK_RED + "Player " + player + 
 						" has been kicked. Could not create player data.");
 				ev.getPlayer().kickPlayer("Error: Could not create player data. Please contact an administrator.");
+				
+				return;
 			} else {
 				common.ifDebug("Player created successfully.");
 				
@@ -51,6 +53,8 @@ public class DJPlayerListener extends PlayerListener {
 				ev.getPlayer().sendMessage(common.prefix + ChatColor.AQUA + common.getNewPlayerMsg(player));
 			}
 		}
+		
+		common.addJobPerms(player);
 	}
 	
 	@Override
