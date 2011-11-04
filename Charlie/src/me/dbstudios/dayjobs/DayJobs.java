@@ -2,6 +2,7 @@ package me.dbstudios.dayjobs;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -14,8 +15,8 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -49,8 +50,6 @@ public class DayJobs extends JavaPlugin {
 	private Boolean usingPermissions = false;
 	private Boolean usingPermissionsBukkit = false;
 	private Boolean usingPermissionsEx = false;
-	@SuppressWarnings("unused")
-	private Boolean usingSpout = false;
 	
 	// Public variables
 	public final String version = "2.1";
@@ -119,7 +118,6 @@ public class DayJobs extends JavaPlugin {
 		
 		inventoryListener = new DJInventoryListener(this);
 		manager.registerEvent(Event.Type.CUSTOM_EVENT, inventoryListener, Event.Priority.Normal, this);
-		usingSpout = true;
 		
 		log.info(prefix + "Spout found and enabled, using " + manager.getPlugin("Spout").getDescription().getFullName() + ".");
 	}
@@ -155,21 +153,38 @@ public class DayJobs extends JavaPlugin {
 		log.info(prefix + "PermissionsEx found and enabled, using " + manager.getPlugin("PermissionsEx").getDescription().getFullName() + ".");
 	}
 	
-	@SuppressWarnings("unchecked")
 	public void addJobPerms(String player) {
 		if (usingPermissionsEx) {
 			PermissionManager manager = PermissionsEx.getPermissionManager();
-			List<String> nodes = (List<String>)config.getList("config.jobs." + getJob(player) + ".permissions");
+			List<?> genericList = config.getList("config.jobs." + getJob(player) + ".permissions", null);
+			List<String> nodes = new ArrayList<String>();
 			
-			if (nodes != null) {
+			if (!genericList.isEmpty() && genericList != null) {
+				for (Object o : genericList) {
+					if (o instanceof String) {
+						nodes.add((String)o);
+					}
+				}
+			}
+			
+			if (nodes != null && !nodes.isEmpty()) {
 				for (String node : nodes) {
 					manager.getUser(player).addPermission(node);
 				}
 			}
 		} else if (usingPermissionsBukkit) {
-			List<String> nodes = (List<String>)config.getList("config.jobs." + getJob(player) + ".permissions");
+			List<?> genericList = config.getList("config.jobs." + getJob(player) + ".permissions", null);
+			List<String> nodes = new ArrayList<String>();
 			
-			if (nodes != null) {
+			if (!genericList.isEmpty() && genericList != null) {
+				for (Object o : genericList) {
+					if (o instanceof String) {
+						nodes.add((String)o);
+					}
+				}
+			}
+			
+			if (nodes != null && !nodes.isEmpty()) {
 				for (String node : nodes) {
 					getPlayer(player).addAttachment(this, node, true);
 				}
@@ -443,50 +458,120 @@ public class DayJobs extends JavaPlugin {
 	 * @param type		The type of permit to check.
 	 * @return			A Boolean value representative of the presence of a match.
 	 */
-	@SuppressWarnings("unchecked")
 	public Boolean checkMatch(String item, String player, String type) {
 		String job = getJob(player);
 		Boolean matched = false;
 		
-		List<String> vals = (List<String>)config.getList("config.all." + type, null);
+		List<?> genericList = config.getList("config.jobs." + job + "." + type, null);
+		List<String> vals = new ArrayList<String>();
+		
+		ifDebug("List<?> genericList.toString() = " + genericList.toString());
+		ifDebug("        genericList.isEmpty()  = " + genericList.isEmpty());
+		
+		if (!genericList.isEmpty() && genericList != null) {
+			for (Object o : genericList) {
+				if (o instanceof String) {
+					vals.add((String)o);
+				}
+			}
+		} else {
+			vals.add("Nothing");
+		}
+		
+		ifDebug("List<String> vals.toString() = " + vals.toString());
+		ifDebug("             vals.isEmpty()  = " + vals.isEmpty());
 		
 		for (String val : vals) {
+			ifDebug("String val : vals = " + val);
+			ifDebug("    Checking against item '" + item + "'");
+			
 			if (val.equalsIgnoreCase(item)) {
+				ifDebug("        Match found, breaking loop");
+				
 				matched = true;
 				break;
 			} else if (val.startsWith("-") && val.endsWith(item)) {
+				ifDebug("        Match not found, but negative exceptor operator found, breaking loop");
+				
 				matched = false;
 				break;
 			} else if (val.startsWith("+") && val.endsWith(item)) {
+				ifDebug("        Exact match not found, but positive exceptor operator found, breaking loop");
+				
 				matched = true;
 				break;
 			} else if (val.equalsIgnoreCase("ALL")) {
+				ifDebug("        Exact match not found, but general inclusive operator found, not breaking loop");
+				
 				matched = true;
 			} else if (val.equalsIgnoreCase("NONE") || val.equalsIgnoreCase("NOTHING")) {
+				ifDebug("        Exact match not found, but general exclusive operator found, not breaking loop");
+				
 				matched = false;
 			}
 		}
 		
-		vals = (List<String>)config.getList("config.jobs." + job + "." + type, null);
+		ifDebug("Boolean matched = " + matched);
 		
-		for (String val : vals) {
-			if (val.equalsIgnoreCase(item)) {
-				matched = true;
-				break;
-			} else if (val.startsWith("-") && val.endsWith(item)) {
-				matched = false;
-				break;
-			} else if (val.startsWith("+") && val.endsWith(item)) {
-				matched = true;
-				break;
-			} else if (val.equalsIgnoreCase("ALL")) {
-				matched = true;
-			} else if (val.equalsIgnoreCase("NONE") || val.equalsIgnoreCase("NOTHING")) {
-				matched = false;
+		if (!matched) {
+			genericList = config.getList("config.jobs." + job + "." + type, null);
+			vals = new ArrayList<String>();
+			
+			ifDebug("List<?> genericList.toString() = " + genericList.toString());
+			ifDebug("        genericList.isEmpty()  = " + genericList.isEmpty());
+		
+			if (!genericList.isEmpty() && genericList != null) {
+				for (Object o : genericList) {
+					if (o instanceof String) {
+						vals.add((String)o);
+					}
+				}
+			} else {
+				vals.add("Nothing");
+			}
+			
+			ifDebug("List<String> vals.toString() = " + vals.toString());
+			ifDebug("             vals.isEmpty()  = " + vals.isEmpty());
+			
+			for (String val : vals) {
+				if (val.equalsIgnoreCase(item)) {
+					ifDebug("        Match found, breaking loop");
+					
+					matched = true;
+					break;
+				} else if (val.startsWith("-") && val.endsWith(item)) {
+					ifDebug("        Match not found, but negative exceptor operator found, breaking loop");
+					
+					matched = false;
+					break;
+				} else if (val.startsWith("+") && val.endsWith(item)) {
+					ifDebug("        Exact match not found, but positive exceptor operator found, breaking loop");
+					
+					matched = true;
+					break;
+				} else if (val.equalsIgnoreCase("ALL")) {
+					ifDebug("        Exact match not found, but general inclusive operator found, not breaking loop");
+					
+					matched = true;
+				} else if (val.equalsIgnoreCase("NONE") || val.equalsIgnoreCase("NOTHING")) {
+					ifDebug("        Exact match not found, but general exclusive operator found, not breaking loop");
+					
+					matched = false;
+				}
 			}
 		}
+		
+		ifDebug("Match check completed for job '" + job + "' on item '" + item + "', returning " + matched);
 		
 		return matched;
+	}
+	
+	/**
+	 * An alternate call to checkMatch, allowing a Player object to represent the
+	 * player being checked, as opposed to the player's name in a string.
+	 */
+	public Boolean checkMatch(String item, Player player, String type) {
+		return checkMatch(item, player.getName(), type);
 	}
 
 	/**
@@ -883,7 +968,7 @@ public class DayJobs extends JavaPlugin {
 	 * section in config.yml
 	 *
 	 * @param job	The job whose options are being retrieved.
-	 * @param node	The node, or option, under <job> that is being retrieved.
+	 * @param node	The node, or option, under 'job' that is being retrieved.
 	 * @return		A String value containing the value of the option requested.
 	 *				If the option is not set, or can't be retrieved, null is returned.
 	 */
@@ -918,7 +1003,7 @@ public class DayJobs extends JavaPlugin {
 	}
 	
 	/**
-	 * Reloads all {@link YamlConfiguration} files used by DayJobs.
+	 * Reloads all {@link FileConfiguration} files used by DayJobs.
 	 */
 	public void reloadConfigs() {
 		try {

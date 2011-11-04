@@ -21,7 +21,7 @@ public class DJInventoryListener extends InventoryListener {
 	@Override
 	public void onInventoryClose(InventoryCloseEvent ev) {
 		Inventory inv = ev.getPlayer().getInventory();
-		String player = ev.getPlayer().getDisplayName();
+		String player = ev.getPlayer().getName();
 		ItemStack[] armor = {inv.getItem(36), inv.getItem(37), inv.getItem(38), inv.getItem(39)};
 		int i = 0;
 		
@@ -51,7 +51,7 @@ public class DJInventoryListener extends InventoryListener {
 	@Override
 	public void onInventoryCraft(InventoryCraftEvent ev) {
 		ItemStack item = ev.getResult();
-		String player = ev.getPlayer().getDisplayName();
+		String player = ev.getPlayer().getName();
 		
 		if (!common.checkMatch(item.getType().name(), player, "can-craft")) {
 			item.setType(Material.AIR);

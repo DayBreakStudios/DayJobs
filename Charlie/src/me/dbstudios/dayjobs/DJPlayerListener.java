@@ -18,7 +18,7 @@ public class DJPlayerListener extends PlayerListener {
 	
 	@Override
 	public void onPlayerInteract(PlayerInteractEvent ev) {
-		String player = ev.getPlayer().getDisplayName();
+		String player = ev.getPlayer().getName();
 		
 		if (ev.getItem() != null && ev.getAction().name().equalsIgnoreCase("LEFT_CLICK_BLOCK") && !common.isExempt(player)) {
 			String item = ev.getItem().getType().name();
@@ -59,7 +59,7 @@ public class DJPlayerListener extends PlayerListener {
 	
 	@Override
 	public void onPlayerMove(PlayerMoveEvent ev) {
-		String player = ev.getPlayer().getDisplayName();
+		String player = ev.getPlayer().getName();
 		String zone = common.getInZone(player);
 		
 		common.ifDebug("Player '" + player + "' in zone '" + zone + "'.");
@@ -114,7 +114,7 @@ public class DJPlayerListener extends PlayerListener {
 					newLoc.setZ(newLoc.getZ() - 1.0d);
 					break;
 				case 0:
-					common.ifDebug("Error: Could not determine '" + ev.getPlayer().getDisplayName() + "'s direction.");						
+					common.ifDebug("Error: Could not determine " + ev.getPlayer().getName() + "'s direction.");						
 				}
 				
 				ev.getPlayer().teleport(newLoc);
@@ -125,7 +125,7 @@ public class DJPlayerListener extends PlayerListener {
 	
 	@Override
 	public void onPlayerInteractEntity(PlayerInteractEntityEvent ev) {
-		String player = ev.getPlayer().getDisplayName();
+		String player = ev.getPlayer().getName();
 		
 		if (ev.getPlayer().getItemInHand() != null && !common.isExempt(player)) {
 			String item = ev.getPlayer().getItemInHand().getType().name();
@@ -140,6 +140,6 @@ public class DJPlayerListener extends PlayerListener {
 	@Override
 	public void onPlayerRespawn(PlayerRespawnEvent ev) {
 		ev.setRespawnLocation(common.getDeathSpawn(ev.getPlayer().getWorld().getName()));
-		ev.getPlayer().sendMessage(common.prefix + ChatColor.AQUA + common.getRespawnMsg(ev.getPlayer().getDisplayName()));
+		ev.getPlayer().sendMessage(common.prefix + ChatColor.AQUA + common.getRespawnMsg(ev.getPlayer().getName()));
 	}
 }

@@ -40,7 +40,7 @@ public class DJCommander {
 					for (String job : jobs) {
 						String fname = common.getConfigFile().getString("config.jobs." + job + ".friendly-name");
 						
-						sender.sendMessage(ChatColor.AQUA + "--> " + fname + " (" + job + ").");
+						sender.sendMessage(ChatColor.AQUA + "--> " + fname + " (" + job + ")");
 					}
 				}
 				
@@ -157,11 +157,33 @@ public class DJCommander {
 					canCraftList.add("Nothing");
 				}
 				
+				genericList = common.getConfigFile().getList(path + ".can-smelt");
+				List<String> canSmeltList = new ArrayList<String>();
+				
+				if (!genericList.isEmpty() && genericList != null) {
+					for (Object o : genericList) {
+						if (o instanceof String) {
+							String item = (String)o;
+							
+							if (!item.startsWith("-")) {
+								if (item.startsWith("+")) {
+									item = item.replace("+", "");
+								}
+								
+								canSmeltList.add(item);
+							}
+						}
+					}
+				} else {
+					canSmeltList.add("Nothing");
+				}
+				
 				String canPlace = common.parseToLine(canPlaceList);
 				String canUse   = common.parseToLine(canUseList);
 				String canWear  = common.parseToLine(canWearList);
 				String canBreak = common.parseToLine(canBreakList);
 				String canCraft = common.parseToLine(canCraftList);
+				String canSmelt = common.parseToLine(canSmeltList);
 				
 				sender.sendMessage(common.prefix + ChatColor.AQUA + "Job info for '" + job + "':");
 				sender.sendMessage(ChatColor.AQUA + "--> Full name: " + ChatColor.DARK_AQUA + fname);
@@ -171,29 +193,30 @@ public class DJCommander {
 				sender.sendMessage(ChatColor.AQUA + "--> Can wear: " + ChatColor.DARK_AQUA + canWear);
 				sender.sendMessage(ChatColor.AQUA + "--> Can break: " + ChatColor.DARK_AQUA + canBreak);
 				sender.sendMessage(ChatColor.AQUA + "--> Can craft: " + ChatColor.DARK_AQUA + canCraft);
+				sender.sendMessage(ChatColor.AQUA + "--> Can smelt: " + ChatColor.DARK_AQUA + canSmelt);
 				
 				return true;
 			} else if (args[0].equalsIgnoreCase("help")) {				
 				sender.sendMessage(common.prefix + ChatColor.AQUA + "Commands and syntax:");
 				
 				if (common.hasPerm(senderName, "player.list", false)) {
-					sender.sendMessage(ChatColor.DARK_AQUA + "--> /job list");
-					sender.sendMessage(ChatColor.AQUA + "  Display available jobs");
+					sender.sendMessage(ChatColor.AQUA + "--> /job list");
+					sender.sendMessage(ChatColor.DARK_AQUA + "  Display available jobs");
 				}
 				
 				if (common.hasPerm(senderName, "player.info", false)) {
-					sender.sendMessage(ChatColor.DARK_AQUA + "--> /job info [<job>]");
-					sender.sendMessage(ChatColor.AQUA + "  Display info on your job, or on <job> if given");
+					sender.sendMessage(ChatColor.AQUA + "--> /job info [<job>]");
+					sender.sendMessage(ChatColor.DARK_AQUA + "  Display info on your job, or on <job> if given");
 				}
 				
 				if (common.hasPerm(senderName, "player.whois", false)) {
-					sender.sendMessage(ChatColor.DARK_AQUA + "--> /job whois <player>");
-					sender.sendMessage(ChatColor.AQUA + "  Display basic info for <player>");
+					sender.sendMessage(ChatColor.AQUA + "--> /job whois <player>");
+					sender.sendMessage(ChatColor.DARK_AQUA + "  Display basic info for <player>");
 				}
 				
 				if (common.hasPerm(senderName, "player.change", false)) {
-					sender.sendMessage(ChatColor.DARK_AQUA + "--> /job change <job>");
-					sender.sendMessage(ChatColor.AQUA + "  Request a job change to <job>");
+					sender.sendMessage(ChatColor.AQUA + "--> /job change <job>");
+					sender.sendMessage(ChatColor.DARK_AQUA + "  Request a job change to <job>");
 				}
 				
 				return true;
@@ -354,11 +377,33 @@ public class DJCommander {
 						canCraftList.add("Nothing");
 					}
 					
+					genericList = common.getConfigFile().getList(path + ".can-smelt");
+					List<String> canSmeltList = new ArrayList<String>();
+					
+					if (!genericList.isEmpty() && genericList != null) {
+						for (Object o : genericList) {
+							if (o instanceof String) {
+								String item = (String)o;
+								
+								if (!item.startsWith("-")) {
+									if (item.startsWith("+")) {
+										item = item.replace("+", "");
+									}
+									
+									canSmeltList.add(item);
+								}
+							}
+						}
+					} else {
+						canSmeltList.add("Nothing");
+					}
+					
 					String canPlace = common.parseToLine(canPlaceList);
 					String canUse   = common.parseToLine(canUseList);
 					String canWear  = common.parseToLine(canWearList);
 					String canBreak = common.parseToLine(canBreakList);
 					String canCraft = common.parseToLine(canCraftList);
+					String canSmelt = common.parseToLine(canSmeltList);
 					
 					sender.sendMessage(common.prefix + ChatColor.AQUA + "Job info for '" + job + "':");
 					sender.sendMessage(ChatColor.AQUA + "--> Full name: " + ChatColor.DARK_AQUA + fname);
@@ -368,6 +413,7 @@ public class DJCommander {
 					sender.sendMessage(ChatColor.AQUA + "--> Can wear: " + ChatColor.DARK_AQUA + canWear);
 					sender.sendMessage(ChatColor.AQUA + "--> Can break: " + ChatColor.DARK_AQUA + canBreak);
 					sender.sendMessage(ChatColor.AQUA + "--> Can craft: " + ChatColor.DARK_AQUA + canCraft);
+					sender.sendMessage(ChatColor.AQUA + "--> Can smelt: " + ChatColor.DARK_AQUA + canSmelt);
 				} else {
 					sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA + "Job '" + args[1] + "' does not exist.");
 				}
@@ -412,44 +458,46 @@ public class DJCommander {
 					
 					return true;
 				} else if (args[1].equalsIgnoreCase("help") && common.hasPerm(senderName, "admin.help", true)) {
-					sender.sendMessage(common.prefix + ChatColor.DARK_AQUA + "Admin commands and syntax:");
+					sender.sendMessage(common.prefix + ChatColor.AQUA + "Admin commands and syntax:");
 					
 					if (common.hasPerm(senderName, "admin.debug", true)) {
-						sender.sendMessage(ChatColor.DARK_AQUA + "--> /job admin debug");
-						sender.sendMessage(ChatColor.AQUA + "  Toggle verbose logging");
+						sender.sendMessage(ChatColor.AQUA + "--> /job admin debug");
+						sender.sendMessage(ChatColor.DARK_AQUA + "  Toggle verbose logging");
 					}
 					
 					if (common.hasPerm(senderName, "admin.reload", true)) {
-						sender.sendMessage(ChatColor.DARK_AQUA + "--> /job admin reload");
-						sender.sendMessage(ChatColor.AQUA + "  Reload configuration files");
+						sender.sendMessage(ChatColor.AQUA + "--> /job admin reload");
+						sender.sendMessage(ChatColor.DARK_AQUA + "  Reload configuration files");
 					}
 					
 					if (common.hasPerm(senderName, "admin.change", true)) {
-						sender.sendMessage(ChatColor.DARK_AQUA + "--> /job admin change <player> <job>");
-						sender.sendMessage(ChatColor.AQUA + "  Change <player> to <job>");
+						sender.sendMessage(ChatColor.AQUA + "--> /job admin change <player> <job>");
+						sender.sendMessage(ChatColor.DARK_AQUA + "  Change <player> to <job>");
 					}
 					
 					if (common.hasPerm(senderName, "admin.tickets", true)) {
-						sender.sendMessage(ChatColor.DARK_AQUA + "--> /job admin ticket [close <player>]");
-						sender.sendMessage(ChatColor.AQUA + "  Display a list of open tickers, or close a request by <player>, if given");
+						sender.sendMessage(ChatColor.AQUA + "--> /job admin ticket [close <player>]");
+						sender.sendMessage(ChatColor.DARK_AQUA + "  Display a list of open tickers, or close a request by <player>, if given");
 					}
 					
 					if (common.hasPerm(senderName, "admin.spawn", true)) {
-						sender.sendMessage(ChatColor.DARK_AQUA + "--> /job admin spawn [set/tp] [death/new]");
-						sender.sendMessage(ChatColor.AQUA + "  Allows for management of new player and death spawns");
+						sender.sendMessage(ChatColor.AQUA + "--> /job admin spawn [set/tp] [death/new]");
+						sender.sendMessage(ChatColor.DARK_AQUA + "  Allows for management of new player and death spawns");
 					}
 					
 					if (common.hasPerm(senderName, "admin.zones", true)) {
-						sender.sendMessage(ChatColor.DARK_AQUA + "--> /job zone");
-						sender.sendMessage(ChatColor.AQUA + "  Zone commands are many. Please refer to the online documentation for help");
+						sender.sendMessage(ChatColor.AQUA + "--> /job zone");
+						sender.sendMessage(ChatColor.DARK_AQUA + "  Zone commands are many. Please refer to the online documentation for help");
 					}
+					
+					return true;
 				} else {
 					return false;
 				}
 			}
 			
 		case 3:
-			if (args[0].equalsIgnoreCase("zone") && common.hasPerm(senderName, "admin.zones", false)) {
+			if (args[0].equalsIgnoreCase("zone") && common.hasPerm(senderName, "admin.zones", true)) {
 				if (args[1].equalsIgnoreCase("create")) {
 					if (name == null) {
 						name = args[2];
@@ -535,12 +583,13 @@ public class DJCommander {
 							} else {
 								sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA + "Could not create new zone.");
 							}
-						} else if (args[2].equalsIgnoreCase("no")) {
-							clearVars();
-							sender.sendMessage(common.prefix + ChatColor.AQUA + "Zone changes discarded.");
 						} else {
 							sender.sendMessage(common.prefix + ChatColor.DARK_AQUA + "Invalid syntax, '" + args[2] + "' is not valid for /job zone commit.");
 						}
+					} else if (args[2].equals("no")) {
+						clearVars();
+						
+						sender.sendMessage(common.prefix + ChatColor.AQUA + "Zone changes have been discarded.");
 					} else {
 						sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA +
 								"Cannot commit. All zone values must be set first.");
@@ -651,9 +700,11 @@ public class DJCommander {
 								sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA +
 										"Could not set new player spawn.");
 							}
-						} else {
+						} else if (common.hasPerm(senderName, "admin.spawn.set.deathspawn", true) || common.hasPerm(senderName, "admin.spawn.set.newspawn", true)) {
 							sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA +
 									"Can only set 'new' and 'death' spawn locations.");
+						} else {
+							return false;
 						}
 						
 						return true;
@@ -666,9 +717,11 @@ public class DJCommander {
 						} else if (type.equalsIgnoreCase("new") && common.hasPerm(senderName, "admin.spawn.tp.newspawn", true)) {
 							sender.sendMessage(common.prefix + ChatColor.AQUA + "Teleporting to new player spawn location.");
 							((Player)sender).teleport(common.getNewPlayerSpawn(((Player)sender).getLocation().getWorld().getName()));
-						} else {
+						} else if (common.hasPerm(senderName, "admin.spawn.tp.deathspawn", true) || common.hasPerm(senderName, "admin.spawn.tp.new", true)) {
 							sender.sendMessage(common.prefix + ChatColor.RED + "Error: " + ChatColor.DARK_AQUA +
 									"Can only teleport to 'new' and 'death' spawn locations.");
+						} else {
+							return false;
 						}
 					}
 					

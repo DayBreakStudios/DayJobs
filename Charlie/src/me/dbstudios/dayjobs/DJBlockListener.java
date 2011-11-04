@@ -15,7 +15,7 @@ public class DJBlockListener extends BlockListener {
 	@Override
 	public void onBlockPlace(BlockPlaceEvent ev) {
 		String block = ev.getBlock().getType().name();
-		String player = ev.getPlayer().getDisplayName();
+		String player = ev.getPlayer().getName();
 		
 		if (!common.checkMatch(block, player, "can-place") && !common.isExempt(player)) {
 			ev.setCancelled(true);
@@ -26,7 +26,7 @@ public class DJBlockListener extends BlockListener {
 	@Override
 	public void onBlockBreak(BlockBreakEvent ev) {
 		String block = ev.getBlock().getType().name();
-		String player = ev.getPlayer().getDisplayName();
+		String player = ev.getPlayer().getName();
 		
 		if (!common.checkMatch(block, player, "can-break") && !common.isExempt(player)) {
 			ev.setCancelled(true);

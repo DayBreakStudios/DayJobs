@@ -17,7 +17,7 @@ public class DJEntityListener extends EntityListener {
 	@Override
 	public void onEntityDamage(EntityDamageEvent ev) {
 		if (ev.getEntity() instanceof Player) {
-			String player = ((Player)ev.getEntity()).getDisplayName();
+			String player = ((Player)ev.getEntity()).getName();
 			
 			if (!common.isExempt(player)) {
 				int damage = common.getDamage(player, ev.getCause(), ev.getDamage());
