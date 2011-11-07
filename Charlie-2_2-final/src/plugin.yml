@@ -1,0 +1,10 @@
+name: DayJobs
+description: A job class handler by Daybreak Studios
+author: Daybreak Studios
+depends: [Spout]
+main: me.dbstudios.dayjobs.DayJobs
+version: 2.2
+commands:
+    job:
+        description: DayJobs command interface.
+        usage: Command not recognized. Type /job help for assistance.
