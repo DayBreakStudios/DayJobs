@@ -34,11 +34,13 @@ public class DayJobs extends JavaPlugin {
 	private FileConfiguration tickets;
 	private FileConfiguration zones;
 	private FileConfiguration spawns;
+	private FileConfiguration init;
 	private final File configFile = new File(defPath + "config.yml");
 	private final File playersFile = new File(defPath + "players.yml");
 	private final File ticketsFile = new File(defPath + "tickets.yml");
 	private final File zonesFile = new File(defPath + "zones.yml");
 	private final File spawnsFile = new File(defPath + "spawns.yml");
+	private final File initFile = new File(defPath + "init.yml");
 	private final Logger log = Logger.getLogger("Minecraft");
 	private PermissionHandler permHandler;
 	private DJBlockListener blockListener = new DJBlockListener(this);
@@ -46,35 +48,84 @@ public class DayJobs extends JavaPlugin {
 	private DJServerListener serverListener = new DJServerListener(this);
 	private DJEntityListener entityListener = new DJEntityListener(this);
 	private DJInventoryListener inventoryListener;
+	private PluginManager manager;
 	private Boolean debug = false;
 	private Boolean usingPermissions = false;
 	private Boolean usingPermissionsBukkit = false;
 	private Boolean usingPermissionsEx = false;
 	
 	// Public variables
-	public final String version = "2.1";
-	public final String prefix = "<DayJobs> ";
+	protected final String prefix = "<DayJobs> ";
+	protected String version;
 	
 	@Override
 	public void onEnable() {
-		PluginManager manager = this.getServer().getPluginManager();
+		manager = this.getServer().getPluginManager();
 		
 		config = YamlConfiguration.loadConfiguration(configFile);
 		players = YamlConfiguration.loadConfiguration(playersFile);
 		tickets = YamlConfiguration.loadConfiguration(ticketsFile);
 		zones = YamlConfiguration.loadConfiguration(zonesFile);
 		spawns = YamlConfiguration.loadConfiguration(spawnsFile);
+		init = YamlConfiguration.loadConfiguration(initFile);
 		
-		manager.registerEvent(Event.Type.BLOCK_PLACE, blockListener, Event.Priority.Normal, this);
-		manager.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Event.Priority.Normal, this);
-		manager.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Event.Priority.Normal, this);
-		manager.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.Normal, this);
-		manager.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Event.Priority.Normal, this);
-		manager.registerEvent(Event.Type.ENTITY_DAMAGE, entityListener, Event.Priority.Normal, this);
+		version = this.getDescription().getVersion();
+		
+		debug = config.getBoolean("config.debug", false);
+		ifDebug("Verbose logging enabled.");
+		
+		if (isFeatureEnabled("block-place")) {
+			manager.registerEvent(Event.Type.BLOCK_PLACE, blockListener, Event.Priority.Normal, this);
+			
+			ifDebug("Enabled block-place handler.");
+		}
+		
+		if (isFeatureEnabled("block-break")) {
+			manager.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Event.Priority.Normal, this);
+			
+			ifDebug("Enabled block-break handler.");
+		}
+		
+		if (isFeatureEnabled("item-use")) {
+			manager.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.Normal, this);
+			manager.registerEvent(Event.Type.PLAYER_INTERACT_ENTITY, playerListener, Event.Priority.Normal, this);
+			
+			ifDebug("Enabled item-use handler.");
+		}
+		
+		if (isFeatureEnabled("zone")) {
+			manager.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Event.Priority.Normal, this);
+			
+			ifDebug("Enabled zone handler.");
+		}
+		
+		if (isFeatureEnabled("respawn")) {
+			manager.registerEvent(Event.Type.PLAYER_RESPAWN, playerListener, Event.Priority.Normal, this);
+			
+			ifDebug("Enabled respawn handler.");
+		}
+		
+		if (isFeatureEnabled("damage")) {
+			manager.registerEvent(Event.Type.ENTITY_DAMAGE, entityListener, Event.Priority.Normal, this);
+			
+			ifDebug("Enabled damage handler.");
+		}
+		
+		if (isFeatureEnabled("armor")) {
+			ifDebug("Enabled armor handler.");
+		}
+		
+		if (isFeatureEnabled("craft")) {
+			ifDebug("Enabled craft handler.");
+		}
+		
+		if (isFeatureEnabled("smelt")) {
+			ifDebug("Enabled smelt handler.");
+		}
+		
+		manager.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Event.Priority.Normal, this);		
 		manager.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Event.Priority.Normal, this);
-		manager.registerEvent(Event.Type.PLAYER_INTERACT_ENTITY, playerListener, Event.Priority.Normal, this);
-		manager.registerEvent(Event.Type.PLAYER_RESPAWN, playerListener, Event.Priority.Normal, this);
-		
+				
 		if (manager.getPlugin("Spout") != null) {
 			enableSpout();
 		}
@@ -86,9 +137,6 @@ public class DayJobs extends JavaPlugin {
 		if (manager.getPlugin("PermissionsBukkit") != null) {
 			enablePermissionsBukkit();
 		}
-		
-		debug = config.getBoolean("config.debug", false);
-		ifDebug("Verbose logging enabled.");
 		
 		log.info(prefix + "Version " + version + " enabled.");
 	}
@@ -111,8 +159,6 @@ public class DayJobs extends JavaPlugin {
 	 * Enables the listeners that require Spout, and registers the necessary events.
 	 */
 	public void enableSpout() {
-		PluginManager manager = this.getServer().getPluginManager();
-		
 		inventoryListener = new DJInventoryListener(this);
 		manager.registerEvent(Event.Type.CUSTOM_EVENT, inventoryListener, Event.Priority.Normal, this);
 		
@@ -123,8 +169,6 @@ public class DayJobs extends JavaPlugin {
 	 * Enables the use of Permissions by TheYeti.
 	 */
 	public void enablePermissions() {
-		PluginManager manager = this.getServer().getPluginManager();
-		
 		permHandler = ((Permissions)manager.getPlugin("Permissions")).getHandler();
 		usingPermissions = true;
 		
@@ -135,8 +179,6 @@ public class DayJobs extends JavaPlugin {
 	 * Enables the use of PermissionsBukkit.
 	 */
 	public void enablePermissionsBukkit() {
-		PluginManager manager = this.getServer().getPluginManager();
-		
 		log.info(prefix + "PermissionsBukkit found and enabled, using " + manager.getPlugin("PermissionsBukkit").getDescription().getFullName() + ".");
 		usingPermissionsBukkit = true;
 	}
@@ -145,18 +187,16 @@ public class DayJobs extends JavaPlugin {
 	 * Enables the use of PermissionsEx by t3hk0d3.
 	 */
 	public void enablePermissionsEx() {
-		PluginManager manager = this.getServer().getPluginManager();
-		
 		log.info(prefix + "PermissionsEx found and enabled, using " + manager.getPlugin("PermissionsEx").getDescription().getFullName() + ".");
 	}
 	
 	public void addJobPerms(String player) {
 		if (usingPermissionsEx) {
-			PermissionManager manager = PermissionsEx.getPermissionManager();
+			PermissionManager permManager = PermissionsEx.getPermissionManager();
 			List<?> genericList = config.getList("config.jobs." + getJob(player) + ".permissions", null);
 			List<String> nodes = new ArrayList<String>();
 			
-			if (!genericList.isEmpty() && genericList != null) {
+			if (genericList != null) {
 				for (Object o : genericList) {
 					if (o instanceof String) {
 						nodes.add((String)o);
@@ -166,14 +206,14 @@ public class DayJobs extends JavaPlugin {
 			
 			if (nodes != null && !nodes.isEmpty()) {
 				for (String node : nodes) {
-					manager.getUser(player).addPermission(node);
+					permManager.getUser(player).addPermission(node);
 				}
 			}
 		} else if (usingPermissionsBukkit) {
 			List<?> genericList = config.getList("config.jobs." + getJob(player) + ".permissions", null);
 			List<String> nodes = new ArrayList<String>();
 			
-			if (!genericList.isEmpty() && genericList != null) {
+			if (genericList != null) {
 				for (Object o : genericList) {
 					if (o instanceof String) {
 						nodes.add((String)o);
@@ -184,6 +224,45 @@ public class DayJobs extends JavaPlugin {
 			if (nodes != null && !nodes.isEmpty()) {
 				for (String node : nodes) {
 					getPlayer(player).addAttachment(this, node, true);
+				}
+			}
+		}
+	}
+	
+	public void removeJobPerms(String player) {
+		if (usingPermissionsEx) {
+			PermissionManager permManager = PermissionsEx.getPermissionManager();
+			List<?> genericList = config.getList("config.jobs." + getJob(player) + ".permissions", null);
+			List<String> nodes = new ArrayList<String>();
+			
+			if (genericList != null) {
+				for (Object o : genericList) {
+					if (o instanceof String) {
+						nodes.add((String)o);
+					}
+				}
+			}
+			
+			if (!nodes.isEmpty() && nodes != null) {
+				for (String node : nodes) {
+					permManager.getUser(player).removePermission(node);
+				}
+			}
+		} else if (usingPermissionsBukkit) {
+			List<?> genericList = config.getList("config.jobs." + getJob(player) + ".permissions", null);
+			List<String> nodes = new ArrayList<String>();
+			
+			if (genericList != null) {
+				for (Object o : genericList) {
+					if (o instanceof String) {
+						nodes.add((String)o);
+					}
+				}
+			}
+			
+			if (!nodes.isEmpty() && nodes != null) {
+				for (String node : nodes) {
+					getPlayer(player).addAttachment(this, node, false);
 				}
 			}
 		}
@@ -252,7 +331,7 @@ public class DayJobs extends JavaPlugin {
 	 * @return			The display name of the Player whose name is closest to the pattern.
 	 */
 	public String getPlayerName(String pattern) {
-		return this.getServer().getPlayer(pattern).getName();
+		return getPlayer(pattern).getName();
 	}
 	
 	/**
@@ -262,16 +341,6 @@ public class DayJobs extends JavaPlugin {
 	 */
 	public FileConfiguration getConfigFile() {
 		return config;
-	}
-	
-	/**
-	 * Gets the config.yml option at path.
-	 * 
-	 * @param path	The path of the option to get.
-	 * @return		The value located at path.
-	 */
-	public String getConfig(String path) {
-		return config.getString("config." + path);
 	}
 	
 	/**
@@ -378,7 +447,7 @@ public class DayJobs extends JavaPlugin {
 	 * @return			A Boolean representation of the job's presence in config.yml.
 	 */
 	public Boolean jobExists(String job) {
-		return (getConfig("jobs." + job + ".friendly-name") != null);
+		return (config.getString("config.jobs." + job + ".friendly-name") != null);
 	}
 	
 	/**
@@ -1072,6 +1141,8 @@ public class DayJobs extends JavaPlugin {
 	 */
 	public Boolean changeJob(String player, String job) {
 		if (playerExists(player) && jobExists(job)) {
+			removeJobPerms(player);
+			
 			players.set("players." + player + ".job", job);
 			
 			try {
@@ -1081,7 +1152,8 @@ public class DayJobs extends JavaPlugin {
 				
 				log.warning(prefix + "Error: 'players.yml' could not be written. Changes will not be saved.");
 			}
-
+			
+		    addJobPerms(player);
 			return (getJob(player).equalsIgnoreCase(job));
 		} else {
 			return false;
@@ -1231,7 +1303,7 @@ public class DayJobs extends JavaPlugin {
 	}
 	
 	/**
-	 * Gets the message to display to players when the respawn.
+	 * Gets the message to display to players when they respawn.
 	 * 
 	 * @param player		The player who is receiving the respawn message.
 	 * @return				A String containing the respawn message.
@@ -1246,5 +1318,15 @@ public class DayJobs extends JavaPlugin {
 		msg = parseSpecialChars(msg, player);
 		
 		return msg;
+	}
+	
+	/**
+	 * Determines if the given feature is enabled, as defined in init.yml
+	 * 
+	 * @param feature	The feature to check enabled status on.
+	 * @return			True if the feature is enabled, false if it is not. Defaults to true.
+	 */
+	public Boolean isFeatureEnabled(String feature) {
+		return (init.getBoolean("init.enable-" + feature + "-handler", true));
 	}
 }

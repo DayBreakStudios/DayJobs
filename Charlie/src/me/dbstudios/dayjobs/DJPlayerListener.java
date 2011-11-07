@@ -139,7 +139,9 @@ public class DJPlayerListener extends PlayerListener {
 	
 	@Override
 	public void onPlayerRespawn(PlayerRespawnEvent ev) {
-		ev.setRespawnLocation(common.getDeathSpawn(ev.getPlayer().getWorld().getName()));
-		ev.getPlayer().sendMessage(common.prefix + ChatColor.AQUA + common.getRespawnMsg(ev.getPlayer().getName()));
+		if (common.getConfigFile().getBoolean("config.override-bed-spawn", false) || !ev.isBedSpawn()) {
+			ev.setRespawnLocation(common.getDeathSpawn(ev.getPlayer().getWorld().getName()));
+			ev.getPlayer().sendMessage(common.prefix + ChatColor.AQUA + common.getRespawnMsg(ev.getPlayer().getName()));
+		}
 	}
 }

@@ -21,7 +21,7 @@ public class DJInventoryListener extends InventoryListener {
 	
 	@Override
 	public void onInventoryClose(InventoryCloseEvent ev) {
-		if (ev.getInventory() instanceof PlayerInventory) {
+		if (ev.getInventory() instanceof PlayerInventory && common.isFeatureEnabled("armor")) {
 			Inventory inv = ev.getPlayer().getInventory();
 			String player = ev.getPlayer().getName();
 			ItemStack[] armor = {inv.getItem(36), inv.getItem(37), inv.getItem(38), inv.getItem(39)};
@@ -56,7 +56,7 @@ public class DJInventoryListener extends InventoryListener {
 		ItemStack item = ev.getResult();
 		String player = ev.getPlayer().getName();
 		
-		if (!common.checkMatch(item.getType().name(), player, "can-craft") && !common.isExempt(player)) {
+		if (!common.checkMatch(item.getType().name(), player, "can-craft") && !common.isExempt(player) && common.isFeatureEnabled("craft")) {
 			item.setType(Material.AIR);
 			
 			ev.setCursor(item);
@@ -66,7 +66,9 @@ public class DJInventoryListener extends InventoryListener {
 	
 	@Override
 	public void onInventoryClick(InventoryClickEvent ev) {
-		if (ev.getPlayer().getTargetBlock(null, 4).getState() instanceof Furnace && !ev.getSlotType().name().equalsIgnoreCase("SMELTING")) {
+		if (ev.getPlayer().getTargetBlock(null, 4).getState() instanceof Furnace && !ev.getSlotType().name().equalsIgnoreCase("SMELTING") &&
+				common.isFeatureEnabled("smelt")) {
+			
 			String player = ev.getPlayer().getName();
 			ItemStack item = ev.getItem();
 			
